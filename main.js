@@ -4,8 +4,8 @@
 
 // Fields
 let data = []
-const data_head = ["Car", "Manufacturer", "MPG", "Cylinders", "Displacement", "Horsepower", "Weight", "Acceleration", "Year", "Origin"]
-const file_path = "cars.txt"
+//const data_head = ["Car", "Manufacturer", "MPG", "Cylinders", "Displacement", "Horsepower", "Weight", "Acceleration", "Year", "Origin"]
+const file_path = "cars2.txt"
 
 let american = []
 let european = []
@@ -148,6 +148,7 @@ function draw_color_map() {
 // Reading File
 function readTextFile()
 {   
+	let data_head = [];
     var rawFile = new XMLHttpRequest();
      rawFile.open("GET", file_path, false);
      rawFile.onreadystatechange = function ()
@@ -161,15 +162,32 @@ function readTextFile()
 
                 // split to get only lines
                 var lines = content.split("\n")
-                for(i = 0; i < lines.length; i ++){
+				
+				data_head =  lines[0].replace('\t\r','').split('\t')
+				
+                for(i = 1; i < lines.length; i ++){
                     // prepare object
-                    line = {}
+                    var line = {}
                     // split line from tabs
-                    coloumns =  lines[i].split('\t')
+                    columns =  lines[i].split('\t')
                     for(key = 0; key < data_head.length; key ++){
                         // setting up map
-                        line[data_head[key]] = coloumns[key]
+						if (data_head[key] == "Model Year") {
+							line['Year'] = "19".concat(columns[key].replace('\r',''));
+						} else {
+							str = columns[key].replace('\r','').replace(',','.');
+							str2 = Number(str)
+							if (isNaN(str2)) {
+								line[data_head[key]] = str;
+							} else {
+								line[data_head[key]] = str2;
+							}
+						}
                     }
+					// conversions
+					line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
+					line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
+					line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
                     data.push(line)
                 }
              }
