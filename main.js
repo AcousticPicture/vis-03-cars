@@ -74,6 +74,16 @@ function draw_grid() {
     }   
 }
 
+function toUpper(str) {
+	return str
+		.toLowerCase()
+		.split(' ')
+		.map(function(word) {
+			return word[0].toUpperCase() + word.substr(1);
+		})
+		.join(' ');
+}
+
 function draw_manufacturer(){
     ctx.save() // save current context properties before rotating
     ctx.rotate(- Math.PI/2); // rotate context for vertical text
@@ -176,9 +186,10 @@ function readTextFile()
 							line['Year'] = "19".concat(columns[key].replace('\r',''));
 						} else {
 							str = columns[key].replace('\r','').replace(',','.');
+							str = toUpper(str);
 							str2 = Number(str)
 							if (isNaN(str2)) {
-								line[data_head[key]] = str;
+								line[data_head[key]] = String(str);
 							} else {
 								line[data_head[key]] = str2;
 							}
