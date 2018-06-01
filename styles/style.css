@@ -1,6 +1,7 @@
 /* Custom css here */
 .container {
     margin-top: 50px;
+	max-width: 1400px;
 }
 
 h1 {

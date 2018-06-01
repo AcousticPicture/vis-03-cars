@@ -46,19 +46,52 @@ const colors = {
 // Main Function
 // if window loaded, start JS
 window.addEventListener('load', event => {
-    console.log('Start')
-    readTextFile()
-    store_manufacturer()
+    console.log('Start');
+	//initialize();
+    readTextFile();
+    store_manufacturer();
 
     draw()
 })
+
+function initialize() {
+           // Register an event listener to call the resizeCanvas() function 
+           // each time the window is resized.
+           window.addEventListener('resize', resizeCanvas, false);
+           // Draw canvas border for the first time.
+           resizeCanvas();
+        }
+		
 
 canvas.addEventListener('click', function(e) {
 	const mPos = getMousePos(e);
 	for (let c = 0; c < shapes.length; c++) {
 		let shape = shapes[c];
 		if (isSelected(mPos, shapes[c])) {
-			alert('click on shape: ' + shape.name);
+			document.querySelector('#accTitle').innerHTML = shape.name;
+			//alert('click on shape: ' + shape.name);
+			var n = document.getElementById("accList");
+			//var cNode = n.cloneNode(false);
+			//n.parentNode.replaceChild(cNode ,n);
+			while (n.childElementCount > 1) {
+				n.removeChild(n.lastChild);
+			}
+
+			for (let i = 0; i < shape.cars.length; i++) {
+				let bnode = document.createElement("BUTTON");
+				bnode.appendChild(document.createTextNode(shape.cars[i].Car));
+				bnode.classList.add("accordion");
+				document.getElementById("accList").appendChild(bnode);
+				
+				let panel = document.createElement("DIV");
+				let p = document.createElement("P");
+				p.appendChild(document.createTextNode("Lorem"));
+				panel.classList.add("mystyle");
+				panel.appendChild(p);
+				document.getElementById("accList").appendChild(panel);
+			}
+			
+			updateAccordion();
 		}
 	}
   }, true);
@@ -71,6 +104,22 @@ function getMousePos(evt) {
 	};
 }
   
+function updateAccordion() {
+	let acc = document.getElementsByClassName("accordion");
+	let i;
+
+	for (let i = 0; i < acc.length; i++) {
+		acc[i].addEventListener("click", function() {
+			this.classList.toggle("active");
+			let panel = this.nextElementSibling;
+			if (panel.style.display === "block") {
+				panel.style.display = "none";
+			} else {
+				panel.style.display = "block";
+			}
+		});
+	}
+}
 
 // Everything for drawing will be called here
 function draw() {
@@ -146,7 +195,7 @@ function draw_manufacturer(){
 			let cnt = years4[a].values.length;
 			let h = cnt*60/8; // 60px for 8 cars
 			y -= h;
-			shapes.push(new Shape(i * col_width + 2, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr));
+			shapes.push(new Shape(i * col_width + 2, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr, years4[a].values));
 			a_amount += cnt;
 		}
 	}
@@ -313,7 +362,7 @@ function store_manufacturer() {
 // see: https://simonsarris.com/making-html5-canvas-useful/
 // Constructor for Shape objects to hold data for all drawn objects.
 // For now they will just be defined as rectangles.
-function Shape(x, y, w, h, fill, name) {
+function Shape(x, y, w, h, fill, name, cars) {
   // This is a very simple and unsafe constructor. 
   // All we're doing is checking if the values exist.
   // "x || 0" just means "if there is a value for x, use that. Otherwise use 0."
@@ -323,6 +372,7 @@ function Shape(x, y, w, h, fill, name) {
   this.h = h || 1;
   this.fill = fill || '#AAAAAA';
   this.name = name || '';
+  this.cars = cars || [];
 }
 
 // Draws this shape to a given context
