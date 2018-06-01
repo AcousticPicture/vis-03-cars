@@ -4,7 +4,6 @@
 
 // Fields
 let data = []
-//const data_head = ["Car", "Manufacturer", "MPG", "Cylinders", "Displacement", "Horsepower", "Weight", "Acceleration", "Year", "Origin"]
 const file_path = "cars2.txt"
 
 let american = []
@@ -53,8 +52,7 @@ window.addEventListener('load', event => {
     readTextFile();
     store_manufacturer();
 
-    //draw()
-	initialize();
+    initialize();	// resize canvas and draw
 })
 
 function initialize() {
@@ -71,7 +69,6 @@ function initialize() {
 // then draws the new borders accordingly.
 function resizeCanvas() {
 	let clientWidth = document.getElementById('canvaswrapper').clientWidth;
-	//width = clientWidth - 40;
 	width = clientWidth;
 	height = width / 1.5;
 	canvas.width = width;
@@ -97,9 +94,6 @@ canvas.addEventListener('click', function(e) {
 
 			for (let i = 0; i < shape.cars.length; i++) {
 				let radioHtml = '<input type="radio" name="accordion-1" id="ac-' + (i+1) + '"';
-				/*if ( i==0 ) {
-					radioHtml += ' checked="checked"';
-				}*/
 				radioHtml += '>';
 				radioHtml += '<label for="ac-' + (i+1) + '">' + shape.cars[i].Car + '</label></input>';
 
@@ -135,12 +129,7 @@ function getMousePos(evt) {
 
 // Everything for drawing will be called here
 function draw() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
-	/*ctx.strokeStyle = 'blue';
-	ctx.lineWidth = '5';
-	ctx.strokeRect(0, 0, canvas.width, canvas.height);*/
-	
+	ctx.clearRect(0, 0, canvas.width, canvas.height);	
     draw_grid()
     draw_manufacturer()
     draw_color_map()
@@ -157,7 +146,6 @@ function draw_grid() {
     for (let i = 0; i < 7; i ++){
         // biggest value is just under 60 and we want a line every 10 values (starting with 0)
         let y = height - can_margin - (i * margin)
-        //ctx.fillText((i * margin) / 10 ,0, y)
 		ctx.fillText(i * 10 ,0, y)
         ctx.beginPath();
         ctx.moveTo(10,y);
@@ -228,9 +216,6 @@ function draw_manufacturer(){
     ctx.fillText("American", a_length/2 , height - 50)
     ctx.fillStyle = colors.dark_grey
 
-    /*var amount = data.filter((car) => { // get only american cars
-        return String(car.Origin).replace(/\s+/, "")  === "American"
-    }).length*/
     ctx.fillText(a_amount, a_length/2 , height - 20)
 
     ctx.fillStyle = colors.black
@@ -260,7 +245,6 @@ function draw_cars(){
 }
 
 function draw_color_map() {
-    //var squ_size = 15;
 	let squ_size = chartheight / 27;
     var x_val = chartwidth + col_margin
     var count = 0
@@ -392,7 +376,6 @@ Shape.prototype.draw = function() {
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
 }
-
 Shape.protoype.addEventListener('mouseover', function(e) {
 	ctx.fillStyle = '#AAAAAA';
     ctx.fillRect(width + col_margin, 10, 15, 15);
