@@ -170,42 +170,26 @@ function draw_manufacturer(){
 							return rv; }, 
 						[]); 
 					}
-		
-	var y = 0;
-	var years4 = [];
-	var cars = [];
+
 	var a_amount = 0;
     for(let i = 0; i < american.length; i ++) {
        ctx.fillText(american[i], -height + can_margin - 10, col_margin + i * col_width);
        //           Name                 x                     y
-
-	   cars = data.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
-		years4 = groupByArray(cars, "Year");
-		y = height - can_margin;
-		for (let a=0; a < years4.length; a++) {
-			let jahr = years4[a].key;
-			let cnt = years4[a].values.length;
-			let h = cnt * binheight;
-			y -= h;
-			shapes.push(new Shape(i * col_width + 2 + 11, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr, years4[a].values));
-			a_amount += cnt;
-		}
+		a_amount += saveShapes(american[i], i, 0);
 	}
     a_length = american.length * col_width
 
+	var e_amount = 0;
     for(let i = 0; i < european.length; i ++) {
         ctx.fillText(european[i], -height + can_margin - 10, 2 * col_margin + a_length + i * col_width);
-        coord[european[i]] = new Array(2);
-        coord[european[i]]['x'] = 2 * col_margin + a_length + i * col_width;
-        coord[european[i]]['car'] = [];
+		e_amount += saveShapes(european[i], american.length + i, 1);
     }
     e_length = european.length * col_width
 
+	var j_amount = 0;
     for(let i = 0; i < japanese.length; i ++) {
         ctx.fillText(japanese[i], - height + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
-        coord[japanese[i]] = new Array(2)
-        coord[japanese[i]]['x'] = 3 * col_margin + a_length + e_length + i * col_width;
-        coord[japanese[i]]['car'] = []
+        j_amount += saveShapes(japanese[i], american.length + european.length + i, 2);
     }
     j_length = japanese.length * col_width
 
@@ -215,27 +199,47 @@ function draw_manufacturer(){
     ctx.textAlign = "center"
     ctx.fillText("American", a_length/2 , height - 50)
     ctx.fillStyle = colors.dark_grey
-
     ctx.fillText(a_amount, a_length/2 , height - 20)
 
     ctx.fillStyle = colors.black
     ctx.fillText("European", e_length/2 + col_margin + a_length, height - 50)
     ctx.fillStyle = colors.dark_grey
-
-    var amount = data.filter((car) => { // get only european cars
-        return String(car.Origin).replace(/\s+/, "")  === "European"
-    }).length
-    ctx.fillText(amount, e_length/2 + col_margin + a_length, height - 20)
+    ctx.fillText(e_amount, e_length/2 + col_margin + a_length, height - 20)
 
     ctx.fillStyle = colors.black
     ctx.fillText("Japanese", j_length/2 + 2 * col_margin + a_length + e_length, height - 50)
     ctx.fillStyle = colors.dark_grey
+    ctx.fillText(j_amount, j_length/2 + 2 * col_margin + a_length + e_length, height - 20)
 
-    var amount = data.filter((car) => { // get only japanese cars
-        return String(car.Origin).replace(/\s+/, "")  === "Japanese"
-    }).length
-    ctx.fillText(amount, j_length/2 + 2 * col_margin + a_length + e_length, height - 20)
+}
 
+function saveShapes(man, i, regionindex) {
+	var groupByArray = function(xs, key) { 
+						return xs.reduce(function (rv, x) { 
+							let v = key instanceof Function ? key(x) : x[key]; 
+							let el = rv.find((r) => r && r.key === v); 
+							if (el) { el.values.push(x); } 
+							else { rv.push({ key: v, values: [x] }); } 
+							return rv; }, 
+						[]); 
+					}
+	
+	let y = chartheight;
+	let years4 = [];
+	let cars = [];
+	let amount = 0;
+
+   cars = data.filter((car) => {return car.Manufacturer  === man})	// only current manufacturer
+	years4 = groupByArray(cars, "Year");
+	for (let a=0; a < years4.length; a++) {
+		let jahr = years4[a].key;
+		let cnt = years4[a].values.length;
+		let h = cnt * binheight;
+		y -= h;
+		shapes.push(new Shape(regionindex * col_margin + i * col_width + 2 + 11, y, col_width-4, h, colors[jahr], man + ' ' + jahr, years4[a].values));
+		amount += cnt;
+	}
+	return amount;
 }
 
 function draw_cars(){
