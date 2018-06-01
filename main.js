@@ -54,31 +54,13 @@ window.addEventListener('load', event => {
 })
 
 canvas.addEventListener('click', function(e) {
-    const mousePos = {
-		x: e.clientX - canvas.offsetTop,
-		y: e.clientY - canvas.offsetLeft
-	};
-	for (var c = 0; c < shapes.length; c++) {
-      /*if (shapes[c].contains(mousePos.x, mousePos.y)) {
-		  a = 0;
-	  }*/
-		a = 0;
-		var shape = shapes[c];
-		/*if (shapes[c].isSelected(mousePos)) {
-		  alert('click on shape: ' + shape.);
-		}*/
-		/*if (shapes[c].isTest() {
-			a = 1;
-		}*/
-		if (isSelected(mousePos, shapes[c])) {
+	const mPos = getMousePos(e);
+	for (let c = 0; c < shapes.length; c++) {
+		let shape = shapes[c];
+		if (isSelected(mPos, shapes[c])) {
 			alert('click on shape: ' + shape.name);
 		}
 	}
-	/*shapes.forEach(shape => {
-		if (shape.isSelected(mousePos)) {
-		  alert('click on shape: ' + shape.);
-		}
-	});*/
   }, true);
   
 function getMousePos(evt) {
@@ -130,52 +112,47 @@ function draw_manufacturer(){
     ctx.font = "15px Arial"
 	ctx.textAlign = "right";
 	
-	var groupBy = function(xs, key) {
-			return xs.reduce(function(rv, x) {
-				(rv[x[key]] = rv[x[key]] || []).push(x);
-				return rv;
-			}, {});
-		};
+	var groupByArray = function(xs, key) { 
+						return xs.reduce(function (rv, x) { 
+							let v = key instanceof Function ? key(x) : x[key]; 
+							let el = rv.find((r) => r && r.key === v); 
+							if (el) { el.values.push(x); } 
+							else { rv.push({ key: v, values: [x] }); } 
+							return rv; }, 
+						[]); 
+					}
+		
 
-	var amount = 0;
 	var margin = ((height - can_margin) / 10) * 2
 	var y = 0;
 	var years4 = [];
-    for(i = 0; i < american.length; i ++) {
+	var cars = [];
+	var a_amount = 0;
+    for(let i = 0; i < american.length; i ++) {
        ctx.fillText(american[i], -width + can_margin - 10, col_margin + i * col_width);
        //           Name                 x                     y
         coord[american[i]] = new Array(2)
         coord[american[i]]['x'] = col_margin + i * col_width
         coord[american[i]]['car'] = []
 		// coord['Chevrolet'] = {'x' => 35, 'car' => {}}
+
+		cars = data.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
 		
-		var cars = data
-					.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
-		/*var years = cars.map((fcar) => {return fcar.Year})	// only years
-					.filter(function (value, index, self) {return self.indexOf(value) === index;})	// unique*
-		/*var years2 = cars.reduce(years, fcyear, index, cars) => {
-						var y = years[fcyear.Year];
-						y = (y == null) ? 1 : y + 1;
-						years[fcyear.Year] = y;
-						return years
-					}, []);*/
-		
-		var groupByArray = function(xs, key) { return xs.reduce(function (rv, x) { let v = key instanceof Function ? key(x) : x[key]; let el = rv.find((r) => r && r.key === v); if (el) { el.values.push(x); } else { rv.push({ key: v, values: [x] }); } return rv; }, []); }
 		//var years3 = groupBy(cars, "Year");
 		years4 = groupByArray(cars, "Year");
 		y = height;
-		for (a=0; a < years4.length; a++) {
-			var jahr = years4[a].key;
-			var cnt = years4[a].values.length;
-			var h = cnt*60/8; // 60px for 8 cars
+		for (let a=0; a < years4.length; a++) {
+			let jahr = years4[a].key;
+			let cnt = years4[a].values.length;
+			let h = cnt*60/8; // 60px for 8 cars
 			y -= h;
-			shapes.push(new Shape(a * col_width, y, col_width, h, colors[jahr], american[i] + ' ' + jahr));
-			
+			shapes.push(new Shape(i * col_width + 2, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr));
+			a_amount += cnt;
 		}
 	}
     a_length = american.length * col_width
 
-    for(i = 0; i < european.length; i ++) {
+    for(let i = 0; i < european.length; i ++) {
         ctx.fillText(european[i], -width + can_margin - 10, 2 * col_margin + a_length + i * col_width);
         coord[european[i]] = new Array(2);
         coord[european[i]]['x'] = 2 * col_margin + a_length + i * col_width;
@@ -184,7 +161,7 @@ function draw_manufacturer(){
 
     e_length = european.length * col_width
 
-    for(i = 0; i < japanese.length; i ++) {
+    for(let i = 0; i < japanese.length; i ++) {
         ctx.fillText(japanese[i], - width + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
         coord[japanese[i]] = new Array(2)
         coord[japanese[i]]['x'] = 3 * col_margin + a_length + e_length + i * col_width;
@@ -200,10 +177,10 @@ function draw_manufacturer(){
     ctx.fillText("American", a_length/2 , height + 120)
     ctx.fillStyle = colors.dark_grey
 
-    var amount = data.filter((car) => { // get only american cars
+    /*var amount = data.filter((car) => { // get only american cars
         return String(car.Origin).replace(/\s+/, "")  === "American"
-    }).length
-    ctx.fillText(amount, a_length/2 , height + 150)
+    }).length*/
+    ctx.fillText(a_amount, a_length/2 , height + 150)
 
     ctx.fillStyle = colors.black
     ctx.fillText("European", e_length/2 + col_margin + a_length, height + 120)
@@ -300,10 +277,10 @@ function readTextFile()
 }
 
 function isSelected(point, shape) {
-	var deltaX = (shape.x + shape.w) - point.x;
-	var inWidth = ((deltaX >= 0) && (deltaX <= shape.x));
-	var deltaY = (shape.y + shape.h) - point.y;
-	var inHeight = ((deltaY >= 0) && (deltaY <= shape.y));
+	let deltaX = (shape.x + shape.w) - point.x;
+	let inWidth = ((deltaX >= 0) && (deltaX <= shape.w));
+	let deltaY = (shape.y + shape.h) - point.y;
+	let inHeight = ((deltaY >= 0) && (deltaY <= shape.h));
 	return inWidth && inHeight;
 }
 
