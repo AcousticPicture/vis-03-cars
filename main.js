@@ -11,6 +11,7 @@ let american = []
 let european = []
 let japanese = []
 let coord = []
+shapes = [];  // the collection of car boxes
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -52,6 +53,43 @@ window.addEventListener('load', event => {
     draw()
 })
 
+canvas.addEventListener('click', function(e) {
+    const mousePos = {
+		x: e.clientX - canvas.offsetTop,
+		y: e.clientY - canvas.offsetLeft
+	};
+	for (var c = 0; c < shapes.length; c++) {
+      /*if (shapes[c].contains(mousePos.x, mousePos.y)) {
+		  a = 0;
+	  }*/
+		a = 0;
+		var shape = shapes[c];
+		/*if (shapes[c].isSelected(mousePos)) {
+		  alert('click on shape: ' + shape.);
+		}*/
+		/*if (shapes[c].isTest() {
+			a = 1;
+		}*/
+		if (isSelected(mousePos, shapes[c])) {
+			alert('click on shape: ' + shape.name);
+		}
+	}
+	/*shapes.forEach(shape => {
+		if (shape.isSelected(mousePos)) {
+		  alert('click on shape: ' + shape.);
+		}
+	});*/
+  }, true);
+  
+function getMousePos(evt) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+		x: evt.clientX - rect.left,
+		y: evt.clientY - rect.top
+	};
+}
+  
+
 // Everything for drawing will be called here
 function draw() {
     draw_grid()
@@ -91,9 +129,18 @@ function draw_manufacturer(){
     ctx.rotate(- Math.PI/2); // rotate context for vertical text
     ctx.font = "15px Arial"
 	ctx.textAlign = "right";
+	
+	var groupBy = function(xs, key) {
+			return xs.reduce(function(rv, x) {
+				(rv[x[key]] = rv[x[key]] || []).push(x);
+				return rv;
+			}, {});
+		};
 
-    //coord = new Array(american.length + european.length + japanese.length);
-
+	var amount = 0;
+	var margin = ((height - can_margin) / 10) * 2
+	var y = 0;
+	var years4 = [];
     for(i = 0; i < american.length; i ++) {
        ctx.fillText(american[i], -width + can_margin - 10, col_margin + i * col_width);
        //           Name                 x                     y
@@ -101,7 +148,31 @@ function draw_manufacturer(){
         coord[american[i]]['x'] = col_margin + i * col_width
         coord[american[i]]['car'] = []
 		// coord['Chevrolet'] = {'x' => 35, 'car' => {}}
-    }
+		
+		var cars = data
+					.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
+		/*var years = cars.map((fcar) => {return fcar.Year})	// only years
+					.filter(function (value, index, self) {return self.indexOf(value) === index;})	// unique*
+		/*var years2 = cars.reduce(years, fcyear, index, cars) => {
+						var y = years[fcyear.Year];
+						y = (y == null) ? 1 : y + 1;
+						years[fcyear.Year] = y;
+						return years
+					}, []);*/
+		
+		var groupByArray = function(xs, key) { return xs.reduce(function (rv, x) { let v = key instanceof Function ? key(x) : x[key]; let el = rv.find((r) => r && r.key === v); if (el) { el.values.push(x); } else { rv.push({ key: v, values: [x] }); } return rv; }, []); }
+		//var years3 = groupBy(cars, "Year");
+		years4 = groupByArray(cars, "Year");
+		y = height;
+		for (a=0; a < years4.length; a++) {
+			var jahr = years4[a].key;
+			var cnt = years4[a].values.length;
+			var h = cnt*60/8; // 60px for 8 cars
+			y -= h;
+			shapes.push(new Shape(a * col_width, y, col_width, h, colors[jahr], american[i] + ' ' + jahr));
+			
+		}
+	}
     a_length = american.length * col_width
 
     for(i = 0; i < european.length; i ++) {
@@ -155,7 +226,9 @@ function draw_manufacturer(){
 }
 
 function draw_cars(){
-	
+	for (s=0; s < shapes.length; s++) {
+		shapes[s].draw();
+	}
 }
 
 function draw_color_map() {
@@ -226,6 +299,14 @@ function readTextFile()
      rawFile.send(null);
 }
 
+function isSelected(point, shape) {
+	var deltaX = (shape.x + shape.w) - point.x;
+	var inWidth = ((deltaX >= 0) && (deltaX <= shape.x));
+	var deltaY = (shape.y + shape.h) - point.y;
+	var inHeight = ((deltaY >= 0) && (deltaY <= shape.y));
+	return inWidth && inHeight;
+}
+
 function store_manufacturer() {
     american = data.filter((car) => { // get only american cars
         return String(car.Origin).replace(/\s+/, "")  === "American"
@@ -251,3 +332,30 @@ function store_manufacturer() {
         return self.indexOf(value) === index;
     })
 }
+
+// see: https://simonsarris.com/making-html5-canvas-useful/
+// Constructor for Shape objects to hold data for all drawn objects.
+// For now they will just be defined as rectangles.
+function Shape(x, y, w, h, fill, name) {
+  // This is a very simple and unsafe constructor. 
+  // All we're doing is checking if the values exist.
+  // "x || 0" just means "if there is a value for x, use that. Otherwise use 0."
+  this.x = x || 0;
+  this.y = y || 0;
+  this.w = w || 1;
+  this.h = h || 1;
+  this.fill = fill || '#AAAAAA';
+  this.name = name || '';
+}
+
+// Draws this shape to a given context
+Shape.prototype.draw = function() {
+  ctx.fillStyle = this.fill;
+  ctx.fillRect(this.x, this.y, this.w, this.h);
+}
+
+Shape.protoype.addEventListener('mouseover', function(e) {
+	ctx.fillStyle = '#AAAAAA';
+    ctx.fillRect(width + col_margin, 10, 15, 15);
+  }, true);
+
