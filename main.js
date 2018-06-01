@@ -160,16 +160,6 @@ function draw_manufacturer(){
     ctx.rotate(- Math.PI/2); // rotate context for vertical text
     ctx.font = "15px Arial"
 	ctx.textAlign = "right";
-	
-	var groupByArray = function(xs, key) { 
-						return xs.reduce(function (rv, x) { 
-							let v = key instanceof Function ? key(x) : x[key]; 
-							let el = rv.find((r) => r && r.key === v); 
-							if (el) { el.values.push(x); } 
-							else { rv.push({ key: v, values: [x] }); } 
-							return rv; }, 
-						[]); 
-					}
 
 	var a_amount = 0;
     for(let i = 0; i < american.length; i ++) {
@@ -194,6 +184,7 @@ function draw_manufacturer(){
     j_length = japanese.length * col_width
 
     ctx.restore()
+	
     // --- Writing Origins ---
     ctx.font = "20px Raleway"
     ctx.textAlign = "center"
@@ -214,7 +205,7 @@ function draw_manufacturer(){
 }
 
 function saveShapes(man, i, regionindex) {
-	var groupByArray = function(xs, key) { 
+	var groupBy = function(xs, key) { 
 						return xs.reduce(function (rv, x) { 
 							let v = key instanceof Function ? key(x) : x[key]; 
 							let el = rv.find((r) => r && r.key === v); 
@@ -230,7 +221,7 @@ function saveShapes(man, i, regionindex) {
 	let amount = 0;
 
    cars = data.filter((car) => {return car.Manufacturer  === man})	// only current manufacturer
-	years4 = groupByArray(cars, "Year");
+	years4 = groupBy(cars, "Year");
 	for (let a=0; a < years4.length; a++) {
 		let jahr = years4[a].key;
 		let cnt = years4[a].values.length;
