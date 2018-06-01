@@ -69,29 +69,38 @@ canvas.addEventListener('click', function(e) {
 		let shape = shapes[c];
 		if (isSelected(mPos, shapes[c])) {
 			document.querySelector('#accTitle').innerHTML = shape.name;
-			//alert('click on shape: ' + shape.name);
-			var n = document.getElementById("accList");
-			//var cNode = n.cloneNode(false);
-			//n.parentNode.replaceChild(cNode ,n);
-			while (n.childElementCount > 1) {
+			var n = document.getElementById("ac-container");
+			while (n.childElementCount > 0) {
 				n.removeChild(n.lastChild);
 			}
 
 			for (let i = 0; i < shape.cars.length; i++) {
-				let bnode = document.createElement("BUTTON");
-				bnode.appendChild(document.createTextNode(shape.cars[i].Car));
-				bnode.classList.add("accordion");
-				document.getElementById("accList").appendChild(bnode);
+				let radioHtml = '<input type="radio" name="accordion-1" id="ac-' + (i+1) + '"';
+				/*if ( i==0 ) {
+					radioHtml += ' checked="checked"';
+				}*/
+				radioHtml += '>';
+				radioHtml += '<label for="ac-' + (i+1) + '">' + shape.cars[i].Car + '</label></input>';
+
+				let cardiv = document.createElement('DIV');
+				cardiv.innerHTML = radioHtml;	// input and label
 				
-				let panel = document.createElement("DIV");
-				let p = document.createElement("P");
-				p.appendChild(document.createTextNode("Lorem"));
-				panel.classList.add("mystyle");
-				panel.appendChild(p);
-				document.getElementById("accList").appendChild(panel);
+				let listHtml = '<ul><li>Cylinders: ' + shape.cars[i].Cylinders + '</li>';
+				listHtml += '<li>Displacement: ' + parseFloat(shape.cars[i].Displacement2).toFixed(2) + ' ccm</li>';
+				listHtml += '<li>Consumption: ' + parseFloat(shape.cars[i].Reach).toFixed(1) + ' l</li>';
+				listHtml += '<li>Horsepower: ' + shape.cars[i].Horsepower + ' PS</li>';
+				listHtml += '<li>Acceleration: ' + shape.cars[i].Acceleration + ' s</li>';
+				listHtml += '<li>Weight: ' + parseFloat(shape.cars[i].WeightKG).toFixed(0) + ' kg</li>';
+				listHtml += '</ul>';
+				let art = document.createElement("ARTICLE");
+				art.innerHTML = listHtml;
+				art.classList.add("ac-medium");
+				cardiv.appendChild(art);
+				
+				let test = document.getElementById("ac-container");
+				test.appendChild(cardiv);
 			}
 			
-			updateAccordion();
 		}
 	}
   }, true);
@@ -102,23 +111,6 @@ function getMousePos(evt) {
 		x: evt.clientX - rect.left,
 		y: evt.clientY - rect.top
 	};
-}
-  
-function updateAccordion() {
-	let acc = document.getElementsByClassName("accordion");
-	let i;
-
-	for (let i = 0; i < acc.length; i++) {
-		acc[i].addEventListener("click", function() {
-			this.classList.toggle("active");
-			let panel = this.nextElementSibling;
-			if (panel.style.display === "block") {
-				panel.style.display = "none";
-			} else {
-				panel.style.display = "block";
-			}
-		});
-	}
 }
 
 // Everything for drawing will be called here
