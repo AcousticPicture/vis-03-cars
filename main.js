@@ -10,6 +10,7 @@ const file_path = "cars2.txt"
 let american = []
 let european = []
 let japanese = []
+let coord = []
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -56,6 +57,7 @@ function draw() {
     draw_grid()
     draw_manufacturer()
     draw_color_map()
+	draw_cars()
 }
 
 function draw_grid() {
@@ -95,17 +97,27 @@ function draw_manufacturer(){
     for(i = 0; i < american.length; i ++) {
        ctx.fillText(american[i], -width + can_margin - 10, col_margin + i * col_width);
        //           Name                 x                     y
+        coord[american[i]] = new Array(2)
+        coord[american[i]]['x'] = col_margin + i * col_width
+        coord[american[i]]['car'] = []
+		// coord['Chevrolet'] = {'x' => 35, 'car' => {}}
     }
     a_length = american.length * col_width
 
     for(i = 0; i < european.length; i ++) {
         ctx.fillText(european[i], -width + can_margin - 10, 2 * col_margin + a_length + i * col_width);
+        coord[european[i]] = new Array(2);
+        coord[european[i]]['x'] = 2 * col_margin + a_length + i * col_width;
+        coord[european[i]]['car'] = [];
     }
 
     e_length = european.length * col_width
 
     for(i = 0; i < japanese.length; i ++) {
         ctx.fillText(japanese[i], - width + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
+        coord[japanese[i]] = new Array(2)
+        coord[japanese[i]]['x'] = 3 * col_margin + a_length + e_length + i * col_width;
+        coord[japanese[i]]['car'] = []
     }
 
     j_length = japanese.length * col_width
@@ -140,6 +152,10 @@ function draw_manufacturer(){
     }).length
     ctx.fillText(amount, j_length/2 + 2 * col_margin + a_length + e_length, height + 150)
 
+}
+
+function draw_cars(){
+	
 }
 
 function draw_color_map() {
