@@ -15,12 +15,15 @@ shapes = [];  // the collection of car boxes
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
-const width = 820
-const height = 600
-const can_margin = 200
+var width = 820
+var height = 600
+var can_margin = 200
+var chartwidth = 675;
+var chartheight = 450;
+var binheight = chartheight / 60;	// margin for single block (1 car)
 
-const col_width = 25
-const col_margin = 20
+var col_width = 25
+var col_margin = 20
 
 const colors = {
     light_grey: '#ddd',
@@ -47,21 +50,39 @@ const colors = {
 // if window loaded, start JS
 window.addEventListener('load', event => {
     console.log('Start');
-	//initialize();
     readTextFile();
     store_manufacturer();
 
-    draw()
+    //draw()
+	initialize();
 })
 
 function initialize() {
-           // Register an event listener to call the resizeCanvas() function 
-           // each time the window is resized.
-           window.addEventListener('resize', resizeCanvas, false);
-           // Draw canvas border for the first time.
-           resizeCanvas();
-        }
-		
+	var clientWidth = document.getElementById('canvaswrapper').clientWidth;
+	var wrapper = document.getElementById('canvaswrapper');
+	   // Register an event listener to call the resizeCanvas() function 
+	   // each time the window is resized.
+	   window.addEventListener('resize', resizeCanvas, false);
+	   // Draw canvas border for the first time.
+	   resizeCanvas();
+	}
+// Runs each time the DOM window resize event fires.
+// Resets the canvas dimensions to match window,
+// then draws the new borders accordingly.
+function resizeCanvas() {
+	let clientWidth = document.getElementById('canvaswrapper').clientWidth;
+	//width = clientWidth - 40;
+	width = clientWidth;
+	height = width / 1.5;
+	canvas.width = width;
+	canvas.height = height;
+	chartwidth = width / 6 * 5;
+	chartheight = height * 0.75;
+	can_margin = height - chartheight;
+	col_margin = chartheight / 17;
+	col_width = chartwidth / 34;
+	draw();
+}		
 
 canvas.addEventListener('click', function(e) {
 	const mPos = getMousePos(e);
@@ -100,7 +121,6 @@ canvas.addEventListener('click', function(e) {
 				let test = document.getElementById("ac-container");
 				test.appendChild(cardiv);
 			}
-			
 		}
 	}
   }, true);
@@ -115,6 +135,12 @@ function getMousePos(evt) {
 
 // Everything for drawing will be called here
 function draw() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	
+	/*ctx.strokeStyle = 'blue';
+	ctx.lineWidth = '5';
+	ctx.strokeRect(0, 0, canvas.width, canvas.height);*/
+	
     draw_grid()
     draw_manufacturer()
     draw_color_map()
@@ -123,29 +149,23 @@ function draw() {
 
 function draw_grid() {
     // ctx.font = "30px Arial"
-    var margin = ((height - can_margin) / 10) * 2
-    for (i = 0; i < 10; i ++){
-        ctx.fillStyle = colors.black
-        // 60 px for 8 cars
-        var y = height - (i * margin)
-        ctx.fillText((i * margin) / 10 ,0, y)
-        ctx.strokeStyle = colors.light_grey
+	ctx.fillStyle = colors.black
+	ctx.lineWidth = '1';
+	ctx.strokeStyle = colors.light_grey
+	binheight = chartheight / 60;
+    let margin = binheight * 10;
+    for (let i = 0; i < 7; i ++){
+        // biggest value is just under 60 and we want a line every 10 values (starting with 0)
+        let y = height - can_margin - (i * margin)
+        //ctx.fillText((i * margin) / 10 ,0, y)
+		ctx.fillText(i * 10 ,0, y)
         ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(width,y);
+        ctx.moveTo(10,y);
+        ctx.lineTo(chartwidth - 10,y);
         ctx.stroke();
     }
 }
 
-function toUpper(str) {
-	return str
-		.toLowerCase()
-		.split(' ')
-		.map(function(word) {
-			return word[0].toUpperCase() + word.substr(1);
-		})
-		.join(' ');
-}
 
 function draw_manufacturer(){
     ctx.save() // save current context properties before rotating
@@ -163,83 +183,73 @@ function draw_manufacturer(){
 						[]); 
 					}
 		
-
-	var margin = ((height - can_margin) / 10) * 2
 	var y = 0;
 	var years4 = [];
 	var cars = [];
 	var a_amount = 0;
     for(let i = 0; i < american.length; i ++) {
-       ctx.fillText(american[i], -width + can_margin - 10, col_margin + i * col_width);
+       ctx.fillText(american[i], -height + can_margin - 10, col_margin + i * col_width);
        //           Name                 x                     y
-        coord[american[i]] = new Array(2)
-        coord[american[i]]['x'] = col_margin + i * col_width
-        coord[american[i]]['car'] = []
-		// coord['Chevrolet'] = {'x' => 35, 'car' => {}}
 
-		cars = data.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
-		
-		//var years3 = groupBy(cars, "Year");
+	   cars = data.filter((car) => {return car.Manufacturer  === american[i]})	// only current manufacturer
 		years4 = groupByArray(cars, "Year");
-		y = height;
+		y = height - can_margin;
 		for (let a=0; a < years4.length; a++) {
 			let jahr = years4[a].key;
 			let cnt = years4[a].values.length;
-			let h = cnt*60/8; // 60px for 8 cars
+			let h = cnt * binheight;
 			y -= h;
-			shapes.push(new Shape(i * col_width + 2, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr, years4[a].values));
+			shapes.push(new Shape(i * col_width + 2 + 11, y, col_width-4, h, colors[jahr], american[i] + ' ' + jahr, years4[a].values));
 			a_amount += cnt;
 		}
 	}
     a_length = american.length * col_width
 
     for(let i = 0; i < european.length; i ++) {
-        ctx.fillText(european[i], -width + can_margin - 10, 2 * col_margin + a_length + i * col_width);
+        ctx.fillText(european[i], -height + can_margin - 10, 2 * col_margin + a_length + i * col_width);
         coord[european[i]] = new Array(2);
         coord[european[i]]['x'] = 2 * col_margin + a_length + i * col_width;
         coord[european[i]]['car'] = [];
     }
-
     e_length = european.length * col_width
 
     for(let i = 0; i < japanese.length; i ++) {
-        ctx.fillText(japanese[i], - width + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
+        ctx.fillText(japanese[i], - height + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
         coord[japanese[i]] = new Array(2)
         coord[japanese[i]]['x'] = 3 * col_margin + a_length + e_length + i * col_width;
         coord[japanese[i]]['car'] = []
     }
-
     j_length = japanese.length * col_width
 
     ctx.restore()
     // --- Writing Origins ---
     ctx.font = "20px Raleway"
     ctx.textAlign = "center"
-    ctx.fillText("American", a_length/2 , height + 120)
+    ctx.fillText("American", a_length/2 , height - 50)
     ctx.fillStyle = colors.dark_grey
 
     /*var amount = data.filter((car) => { // get only american cars
         return String(car.Origin).replace(/\s+/, "")  === "American"
     }).length*/
-    ctx.fillText(a_amount, a_length/2 , height + 150)
+    ctx.fillText(a_amount, a_length/2 , height - 20)
 
     ctx.fillStyle = colors.black
-    ctx.fillText("European", e_length/2 + col_margin + a_length, height + 120)
+    ctx.fillText("European", e_length/2 + col_margin + a_length, height - 50)
     ctx.fillStyle = colors.dark_grey
 
     var amount = data.filter((car) => { // get only european cars
         return String(car.Origin).replace(/\s+/, "")  === "European"
     }).length
-    ctx.fillText(amount, e_length/2 + col_margin + a_length, height + 150)
+    ctx.fillText(amount, e_length/2 + col_margin + a_length, height - 20)
 
     ctx.fillStyle = colors.black
-    ctx.fillText("Japanese", j_length/2 + 2 * col_margin + a_length + e_length, height + 120)
+    ctx.fillText("Japanese", j_length/2 + 2 * col_margin + a_length + e_length, height - 50)
     ctx.fillStyle = colors.dark_grey
 
     var amount = data.filter((car) => { // get only japanese cars
         return String(car.Origin).replace(/\s+/, "")  === "Japanese"
     }).length
-    ctx.fillText(amount, j_length/2 + 2 * col_margin + a_length + e_length, height + 150)
+    ctx.fillText(amount, j_length/2 + 2 * col_margin + a_length + e_length, height - 20)
 
 }
 
@@ -250,17 +260,18 @@ function draw_cars(){
 }
 
 function draw_color_map() {
-    var squ_size = 15
-    var x_val = width + col_margin
+    //var squ_size = 15;
+	let squ_size = chartheight / 27;
+    var x_val = chartwidth + col_margin
     var count = 0
     ctx.textAlign = "left"
 
 
     for(i = 1982; i > 1969; i--) {
         ctx.fillStyle = colors[i]
-        ctx.fillRect(x_val, col_margin + (2 * col_margin) * count, squ_size, squ_size)
+        ctx.fillRect(x_val, squ_size + squ_size * (count*2), squ_size, squ_size)
         ctx.fillStyle = colors.black
-        ctx.fillText( String(i), x_val + squ_size + col_margin/2, (col_margin + col_margin/2) + (2 * col_margin) * count)
+        ctx.fillText( String(i), x_val + squ_size + col_margin/2, (squ_size + squ_size) + (2 * squ_size) * count - 3)
         count ++
     }
 }
@@ -268,6 +279,15 @@ function draw_color_map() {
 // Reading File
 function readTextFile()
 {
+	var toUpper = function(str) {
+		return str
+			.toLowerCase()
+			.split(' ')
+			.map(function(word) {
+				return word[0].toUpperCase() + word.substr(1);
+			})
+			.join(' ');
+	}	
 	let data_head = [];
     var rawFile = new XMLHttpRequest();
      rawFile.open("GET", file_path, false);
