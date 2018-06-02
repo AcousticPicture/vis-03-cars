@@ -246,19 +246,16 @@ function readTextFile()
 			.toLowerCase()
 			.split(' ')
 			.map(function(word) {
-				return word[0].toUpperCase() + word.substr(1);
+				return word.substr(0,1).toUpperCase() + word.substr(1);
 			})
 			.join(' ');
 	}	
 	let data_head = [];
     var rawFile = new XMLHttpRequest();
      rawFile.open("GET", file_path, false);
-     rawFile.onreadystatechange = function ()
-     {
-         if(rawFile.readyState === 4)
-         {
-             if(rawFile.status === 200 || rawFile.status == 0)
-             {
+     rawFile.onreadystatechange = function () {
+         if(rawFile.readyState === 4) {
+             if(rawFile.status === 200 || rawFile.status == 0) {
                 var content = rawFile.responseText;
                 // --- Reading data to objects ---
 
@@ -271,13 +268,18 @@ function readTextFile()
                     // prepare object
                     var line = {}
                     // split line from tabs
-                    columns =  lines[i].split('\t')
+                    var columns =  lines[i].split('\t')
                     for(key = 0; key < data_head.length; key ++){
                         // setting up map
 						if (data_head[key] == "Model Year") {
 							line['Year'] = "19".concat(columns[key].replace('\r',''));
 						} else {
-							str = columns[key].replace('\r','').replace(',','.');
+							var str = columns[key];
+							if (typeof str === 'undefined') {
+								str = '';
+							}
+							str = str.replace('\r','');
+							str = str.replace(',','.');
 							str = toUpper(str);
 							str2 = Number(str)
 							if (isNaN(str2)) {
@@ -328,8 +330,4 @@ Shape.prototype.draw = function() {
   ctx.fillStyle = this.fill;
   ctx.fillRect(this.x, this.y, this.w, this.h);
 }
-Shape.protoype.addEventListener('mouseover', function(e) {
-	ctx.fillStyle = '#AAAAAA';
-    ctx.fillRect(width + col_margin, 10, 15, 15);
-  }, true);
 

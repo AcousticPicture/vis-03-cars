@@ -62,11 +62,9 @@
     height: 24px;
     right: 13px;
     top: 7px;
-    background: transparent url(../images/arrow_down.png) no-repeat center center;
 }
 
 #ac-container input:checked + label:hover:after {
-    background-image: url(../images/arrow_up.png);
 }
 
 #ac-container input {
@@ -91,11 +89,9 @@
 #ac-container article ul {
     font-style: normal;
     color: #777;
-    /*line-height: 23px;*/
     font-size: 10px;
     padding: 20px;
     text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
-    /*font: normal normal 12px 'Open Sans';*/
 }
 
 #ac-container input:checked ~ article {
