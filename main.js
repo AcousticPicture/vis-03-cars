@@ -3,6 +3,7 @@
 
 
 // Fields
+let content = '';
 let data = []
 const file_path = "cars2.txt"
 
@@ -239,8 +240,22 @@ function draw_color_map() {
 }
 
 // Reading File
-function readTextFile()
+function readXMLHttpRequest() 
 {
+    var rawFile = new XMLHttpRequest();
+     rawFile.open("GET", file_path, false);
+     rawFile.onreadystatechange = function () {
+         if(rawFile.readyState === 4) {
+             if(rawFile.status === 200 || rawFile.status == 0) {
+                content = rawFile.responseText;
+             }
+         }
+     }
+     rawFile.send(null);
+}
+
+// Reading File
+function readTextFile() {
 	var toUpper = function(str) {
 		return str
 			.toLowerCase()
@@ -251,54 +266,48 @@ function readTextFile()
 			.join(' ');
 	}	
 	let data_head = [];
-    var rawFile = new XMLHttpRequest();
-     rawFile.open("GET", file_path, false);
-     rawFile.onreadystatechange = function () {
-         if(rawFile.readyState === 4) {
-             if(rawFile.status === 200 || rawFile.status == 0) {
-                var content = rawFile.responseText;
-                // --- Reading data to objects ---
+	
+	readXMLHttpRequest();
+	// --- Reading data to objects ---
 
-                // split to get only lines
-                var lines = content.split("\n")
+	// split to get only lines
+	var lines = content.split("\n")
 
-				data_head =  lines[0].replace('\t\r','').split('\t')
+	data_head =  lines[0].replace('\t\r','').split('\t')
 
-                for(i = 1; i < lines.length; i ++){
-                    // prepare object
-                    var line = {}
-                    // split line from tabs
-                    var columns =  lines[i].split('\t')
-                    for(key = 0; key < data_head.length; key ++){
-                        // setting up map
-						if (data_head[key] == "Model Year") {
-							line['Year'] = "19".concat(columns[key].replace('\r',''));
-						} else {
-							var str = columns[key];
-							if (typeof str === 'undefined') {
-								str = '';
-							}
-							str = str.replace('\r','');
-							str = str.replace(',','.');
-							str = toUpper(str);
-							str2 = Number(str)
-							if (isNaN(str2)) {
-								line[data_head[key]] = String(str);
-							} else {
-								line[data_head[key]] = str2;
-							}
-						}
-                    }
-					// conversions
-					line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
-					line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
-					line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
-                    data.push(line)
-                }
-             }
-         }
-     }
-     rawFile.send(null);
+	for(i = 1; i < lines.length; i ++){
+		// prepare object
+		let line = {}
+		// split line from tabs
+		let columns =  lines[i].replace('\t\r','').split('\t');
+		if (columns.length == 1 && columns[0] == '') continue;	// ignore empty lines
+		
+		for(key = 0; key < data_head.length; key ++){
+			// setting up map
+			if (data_head[key] == "Model Year") {
+				line['Year'] = "19".concat(columns[key]);
+			} else {
+				let str = columns[key];
+				if (typeof str === 'undefined') {
+					str = '';
+				}
+				str = str.replace('\r','');
+				str = str.replace(',','.');
+				str = toUpper(str);
+				let str2 = Number(str)
+				if (isNaN(str2)) {
+					line[data_head[key]] = String(str);
+				} else {
+					line[data_head[key]] = str2;
+				}
+			}
+		}
+		// conversions
+		line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
+		line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
+		line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
+		data.push(line)
+	}
 }
 
 function isSelected(point, shape) {
