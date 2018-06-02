@@ -6,11 +6,7 @@
 let data = []
 const file_path = "cars2.txt"
 
-let american = []
-let european = []
-let japanese = []
-let coord = []
-shapes = [];  // the collection of car boxes
+var shapes = [];  // the collection of car boxes
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -50,7 +46,6 @@ const colors = {
 window.addEventListener('load', event => {
     console.log('Start');
     readTextFile();
-    store_manufacturer();
 
     initialize();	// resize canvas and draw
 })
@@ -156,72 +151,60 @@ function draw_grid() {
 
 
 function draw_manufacturer(){
-    ctx.save() // save current context properties before rotating
-    ctx.rotate(- Math.PI/2); // rotate context for vertical text
-    ctx.font = "15px Arial"
-	ctx.textAlign = "right";
-
-	var a_amount = 0;
-    for(let i = 0; i < american.length; i ++) {
-       ctx.fillText(american[i], -height + can_margin - 10, col_margin + i * col_width);
-       //           Name                 x                     y
-		a_amount += saveShapes(american[i], i, 0);
-	}
-    a_length = american.length * col_width
-
-	var e_amount = 0;
-    for(let i = 0; i < european.length; i ++) {
-        ctx.fillText(european[i], -height + can_margin - 10, 2 * col_margin + a_length + i * col_width);
-		e_amount += saveShapes(european[i], american.length + i, 1);
-    }
-    e_length = european.length * col_width
-
-	var j_amount = 0;
-    for(let i = 0; i < japanese.length; i ++) {
-        ctx.fillText(japanese[i], - height + can_margin - 10, 3 * col_margin + a_length + e_length + i * col_width);
-        j_amount += saveShapes(japanese[i], american.length + european.length + i, 2);
-    }
-    j_length = japanese.length * col_width
-
-    ctx.restore()
+    offset = 0;
+	let tst = groupBy(data, "Origin");
 	
-    // --- Writing Origins ---
-    ctx.font = "20px Raleway"
-    ctx.textAlign = "center"
-    ctx.fillText("American", a_length/2 , height - 50)
-    ctx.fillStyle = colors.dark_grey
-    ctx.fillText(a_amount, a_length/2 , height - 20)
-
-    ctx.fillStyle = colors.black
-    ctx.fillText("European", e_length/2 + col_margin + a_length, height - 50)
-    ctx.fillStyle = colors.dark_grey
-    ctx.fillText(e_amount, e_length/2 + col_margin + a_length, height - 20)
-
-    ctx.fillStyle = colors.black
-    ctx.fillText("Japanese", j_length/2 + 2 * col_margin + a_length + e_length, height - 50)
-    ctx.fillStyle = colors.dark_grey
-    ctx.fillText(j_amount, j_length/2 + 2 * col_margin + a_length + e_length, height - 20)
+	// for each region...
+	for (let a=0; a < tst.length; a++) {
+		let orig = tst[a].key;
+		let cnt = tst[a].values.length;
+		let mans = groupBy(tst[a].values, "Manufacturer");
+		
+		ctx.save() // save current context properties before rotating
+		ctx.rotate(- Math.PI/2); // rotate context for vertical text
+		ctx.font = "15px Arial"
+		ctx.textAlign = "right";
+		
+		// for each manufacturer (in that region)...
+		for(let i = 0; i < mans.length; i ++) {
+			let man = mans[i].key;
+			let cars = mans[i].values;
+			ctx.fillText(man, -height + can_margin - 10, a * col_margin + col_margin + offset + i * col_width);
+			//           Name                 x                     y
+			saveShapes(man, cars, offset / col_width + i, a);
+		}
+		let localOffset = mans.length * col_width;
+		offset += localOffset;
+		
+		ctx.restore()
+	
+		// --- Writing Origins ---
+		ctx.font = "20px Raleway"
+		ctx.textAlign = "center"
+		ctx.fillText(orig, a * col_margin + (offset - localOffset/2) , height - 50)
+		ctx.fillStyle = colors.dark_grey
+		ctx.fillText(cnt, a * col_margin + (offset - localOffset/2) , height - 20)
+	}
 
 }
 
-function saveShapes(man, i, regionindex) {
-	var groupBy = function(xs, key) { 
-						return xs.reduce(function (rv, x) { 
-							let v = key instanceof Function ? key(x) : x[key]; 
-							let el = rv.find((r) => r && r.key === v); 
-							if (el) { el.values.push(x); } 
-							else { rv.push({ key: v, values: [x] }); } 
-							return rv; }, 
-						[]); 
-					}
+function groupBy(xs, key) { 
+	return xs.reduce(function (rv, x) { 
+		let v = key instanceof Function ? key(x) : x[key]; 
+		let el = rv.find((r) => r && r.key === v); 
+		if (el) { el.values.push(x); } 
+		else { rv.push({ key: v, values: [x] }); } 
+		return rv; }, 
+	[]); 
+}
+
+
+function saveShapes(man, cars, i, regionindex) {
 	
 	let y = chartheight;
-	let years4 = [];
-	let cars = [];
+	let years4 = groupBy(cars, "Year");
 	let amount = 0;
-
-   cars = data.filter((car) => {return car.Manufacturer  === man})	// only current manufacturer
-	years4 = groupBy(cars, "Year");
+	
 	for (let a=0; a < years4.length; a++) {
 		let jahr = years4[a].key;
 		let cnt = years4[a].values.length;
@@ -322,32 +305,6 @@ function isSelected(point, shape) {
 	let deltaY = (shape.y + shape.h) - point.y;
 	let inHeight = ((deltaY >= 0) && (deltaY <= shape.h));
 	return inWidth && inHeight;
-}
-
-function store_manufacturer() {
-    american = data.filter((car) => { // get only american cars
-        return String(car.Origin).replace(/\s+/, "")  === "American"
-    }).map((car) => { // get only manufacuter
-        return car.Manufacturer
-    }).filter(function (value, index, self) { // only unique
-        return self.indexOf(value) === index;
-    })
-
-    european = data.filter((car) => { // get only european cars
-        return String(car.Origin).replace(/\s+/, "")  === "European"
-    }).map((car) => { // get only manufacuter
-        return car.Manufacturer
-    }).filter(function (value, index, self) { // only unique
-        return self.indexOf(value) === index;
-    })
-
-    japanese = data.filter((car) => { // get only european cars
-        return String(car.Origin).replace(/\s+/, "")  === "Japanese"
-    }).map((car) => { // get only manufacuter
-        return car.Manufacturer
-    }).filter(function (value, index, self) { // only unique
-        return self.indexOf(value) === index;
-    })
 }
 
 // see: https://simonsarris.com/making-html5-canvas-useful/
