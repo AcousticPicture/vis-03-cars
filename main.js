@@ -154,6 +154,7 @@ function readTextFile(f) {
 							str = str.replace(',','.');
 							str = toUpper(str);
 							let str2 = Number(str)
+							// TODO: NA-Behandlung
 							if (isNaN(str2)) {
 								line[data_head[key]] = String(str);
 							} else {
@@ -197,7 +198,7 @@ function setupControlls(){
 		y_axis.add(option, y_axis[i]);
 	}
 	
-	var shapes = document.getElementById("shapes");
+	var sh = document.getElementById("shapes");
 	var car_options = document.getElementById("cars");
 
 	var cars = data.map((car, index, data) => {
@@ -213,7 +214,7 @@ function setupControlls(){
 	
 	x_axis.addEventListener("change", draw)
 	y_axis.addEventListener("change", draw)
-	shapes.addEventListener("change", draw)
+	sh.addEventListener("change", draw)
 	car_options.addEventListener("change", draw)
 	color_options.addEventListener("change", draw)
 }
@@ -223,8 +224,8 @@ function draw() {
 	x_axis = x_axis.options[x_axis.selectedIndex].value
 	var y_axis = document.getElementById("y_axis");
 	y_axis = y_axis.options[y_axis.selectedIndex].value
-	var shapes = document.getElementById("shapes");
-	shapes = shapes.options[shapes.selectedIndex].value
+	var sh = document.getElementById("shapes");
+	sh = sh.options[sh.selectedIndex].value
 	var car_option = document.getElementById("cars");
 	car_option = car_option.options[car_option.selectedIndex].value
 	var color_option = document.getElementById("colors");
@@ -235,10 +236,10 @@ function draw() {
 	manus = []
 	datasets = []
 	for (i = 0; i < data.length; i++) {
-		if (shapes == 1) {
+		if (sh == 1) {
 			shape = pointStyles[data[i].Origin]
 			rad = 3
-		} else if (shapes == 2 && data[i].Car == car_option){
+		} else if (sh == 2 && data[i].Car == car_option){
 			shape = 'rectRot'
 			rad = 10
 		} else {
