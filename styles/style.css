@@ -1,9 +1,12 @@
 /* Custom css here */
-.container {
-    margin-top: 50px;
-	max-width: 1400px;
-}
 
-/*h1 {
+#drop_zone, #files {
+    border: 2px dashed #bbb;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    padding: 5px;
     text-align: center;
-}*/
+    font: 20pt bold 'Vollkorn';
+    color: #bbb;
+}

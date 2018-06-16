@@ -64,34 +64,37 @@ function initialize() {
 	var wrapper = document.getElementById('canvaswrapper');
 	
 	// Setup the dnd listeners.
+	document.getElementById('drop_zone').addEventListener('dragover', handleDragOver, false);
+	document.getElementById('drop_zone').addEventListener('drop', handleFileDrop, false);
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
 	document.getElementById('canvaswrapper').style.visibility='hidden';
 	document.getElementById('controlls').style.visibility='hidden';
 	}
 
 // Reading File -> is called every time a new file is selected
-function handleFileSelect(evt) {	
+function handleFileSelect(evt) {
 	var files = evt.target.files; // FileList object
 	if (files.length > 0) {
 		// there is only one file
 		var f = files[0];
+		readTextFile(f);
+		
+		if (!vis) {	// first file: show chart
+			vis = true;
+			document.getElementById('canvaswrapper').style.visibility='visible' ;
+			document.getElementById('controlls').style.visibility='visible' ;
+		}
+	}
+}
 
-		var reader = new FileReader();
-
-		// Closure to capture the file information.
-		reader.onload = (function(theFile) {
-			return function(e) {
-				// callback function (asynchronous!) -> is called, when results have arrived
-				console.log("load file: " + escape(theFile.name));
-				content = e.target.result;
-				document.getElementById('headline').innerHTML = 'Data: ' + escape(theFile.name);
-				readTextFile();
-				updateChart();
-			};
-		})(f);
-
-		// Read in the file as a string.
-		reader.readAsText(f);
+function handleFileDrop(evt) {
+	evt.stopPropagation();
+    evt.preventDefault();
+	
+	var files = evt.dataTransfer.files; // FileList object
+	if (files.length > 0) {
+		var f = files[0];
+		readTextFile(f);
 		
 		if (!vis) {	// first file: show chart
 			vis = true;
@@ -102,10 +105,9 @@ function handleFileSelect(evt) {
 }
   
  
-function readTextFile() {
+function readTextFile(f) {
 	// --- Reading data to objects ---
-	
-	
+		
 	var toUpper = function(str) {
 		return str
 			.toLowerCase()
@@ -115,46 +117,63 @@ function readTextFile() {
 			})
 			.join(' ');
 	}	
+	
+	var reader = new FileReader();
 
-	// split to get only lines
-	var lines = content.split("\n")
-	console.log(lines);
+		// Closure to capture the file information.
+		reader.onload = (function(theFile) {
+			return function(e) {
+				// callback function (asynchronous!) -> is called, when results have arrived
+				console.log("load file: " + escape(theFile.name));
+				content = e.target.result;
+				document.getElementById('headline').innerHTML = 'Data: ' + escape(theFile.name);
+				
+				// split to get only lines
+				var lines = content.split("\n")
+				console.log(lines);
 
-	data_head =  lines[0].replace('\t\r','').split('\t')
+				data_head =  lines[0].replace('\t\r','').split('\t')
 
-	for(i = 1; i < lines.length; i ++){
-		// prepare object
-		let line = {}
-		// split line from tabs
-		let columns =  lines[i].replace('\t\r','').split('\t');
-		if (columns.length == 1 && columns[0] == '') continue;	// ignore empty lines
-		
-		for(key = 0; key < data_head.length; key ++){
-			// setting up map
-			if (data_head[key] == "Model Year") {
-				line['Year'] = parseInt("19".concat(columns[key]));
-			} else {
-				let str = columns[key];
-				if (typeof str === 'undefined') {
-					str = '';
+				for(i = 1; i < lines.length; i ++){
+					// prepare object
+					let line = {}
+					// split line from tabs
+					let columns =  lines[i].replace('\t\r','').split('\t');
+					if (columns.length == 1 && columns[0] == '') continue;	// ignore empty lines
+					
+					for(key = 0; key < data_head.length; key ++){
+						// setting up map
+						if (data_head[key] == "Model Year") {
+							line['Year'] = parseInt("19".concat(columns[key]));
+						} else {
+							let str = columns[key];
+							if (typeof str === 'undefined') {
+								str = '';
+							}
+							str = str.replace('\r','');
+							str = str.replace(',','.');
+							str = toUpper(str);
+							let str2 = Number(str)
+							if (isNaN(str2)) {
+								line[data_head[key]] = String(str);
+							} else {
+								line[data_head[key]] = str2;
+							}
+						}
+					}
+					// conversions
+					line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
+					line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
+					line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
+					data.push(line)
 				}
-				str = str.replace('\r','');
-				str = str.replace(',','.');
-				str = toUpper(str);
-				let str2 = Number(str)
-				if (isNaN(str2)) {
-					line[data_head[key]] = String(str);
-				} else {
-					line[data_head[key]] = str2;
-				}
-			}
-		}
-		// conversions
-		line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
-		line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
-		line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
-		data.push(line)
-	}
+				
+				updateChart();
+			};
+		})(f);	// end of callback function
+
+		// Read in the file as a string.
+		reader.readAsText(f);
 }
 
 function updateChart() {
@@ -286,3 +305,9 @@ function random_rgba() {
     var o = Math.round, r = Math.random, s = 255;
     return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + '0.5' + ')';
 }
+
+function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
