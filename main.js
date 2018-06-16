@@ -22,6 +22,12 @@ var binheight = chartheight / 60;	// margin for single block (1 car)
 var col_width = 25
 var col_margin = 20
 
+const x_axis = document.getElementById("x_axis");
+const y_axis = document.getElementById("y_axis");
+const sh = document.getElementById("shapes");
+const car_options = document.getElementById("cars");
+const color_options = document.getElementById("colors");
+
 const colors = {
     light_grey: '#ddd',
     dark_grey: '#555',
@@ -60,8 +66,11 @@ window.addEventListener('load', event => {
 })
 
 function initialize() {
-	var clientWidth = document.getElementById('canvaswrapper').clientWidth;
-	var wrapper = document.getElementById('canvaswrapper');
+	x_axis.addEventListener("change", draw)
+	y_axis.addEventListener("change", draw)
+	sh.addEventListener("change", draw)
+	car_options.addEventListener("change", draw)
+	color_options.addEventListener("change", draw)
 	
 	// Setup the dnd listeners.
 	document.getElementById('drop_zone').addEventListener('dragover', handleDragOver, false);
@@ -184,50 +193,38 @@ function updateChart() {
 }
 
 function setupControlls(){
-	// Adding select Options to axis-controls
-
-	var x_axis = document.getElementById("x_axis");
-	var y_axis = document.getElementById("y_axis");
+	// clear all dropdown lists
+	x_axis.innerHTML = "";
+	y_axis.innerHTML = "";
+	car_options.innerHTML = "";
+	
+	// Adding select Options to dropdown lists
 	for (i = 0; i < data_head.length; i ++) {
 		// Use the Option constructor: args text, value, defaultSelected, selected
 		x_axis.appendChild(new Option(data_head[i], x_axis[i]));
-		y_axis.appendChild(new Option(data_head[i], y_axis[i]));
 	}
-	//op = x_axis.innerHTML;
-	//y_axis.innerHTML = y_axis.innerHTML + op;
-	
-	var sh = document.getElementById("shapes");
-	var car_options = document.getElementById("cars");
+	y_axis.innerHTML = x_axis.innerHTML;	// just copy options
+	/*var op = new Option("X-Axis", "", true, true);
+	op.disabled = true;
+	x_axis.appendChild(op);
+	var op2 = new Option("Y-Axis", "", true, true);
+	op2.disabled = true;
+	y_axis.appendChild(op2);*/
 
 	var cars = data.map((car, index, data) => {
 		return car.Car
 	})
 	for (i = 0; i < cars.length; i ++) {
-		var option = document.createElement("option");
-		option.text = cars[i];
-		car_options.add(option, car_options[i]);
+		car_options.appendChild(new Option(cars[i], car_options[i]));
 	}
-
-	var color_options = document.getElementById("colors");
-	
-	x_axis.addEventListener("change", draw)
-	y_axis.addEventListener("change", draw)
-	sh.addEventListener("change", draw)
-	car_options.addEventListener("change", draw)
-	color_options.addEventListener("change", draw)
 }
 
 function draw() {
-	var x_axis = document.getElementById("x_axis");
-	x_axis = x_axis.options[x_axis.selectedIndex].value
-	var y_axis = document.getElementById("y_axis");
-	y_axis = y_axis.options[y_axis.selectedIndex].value
-	var sh = document.getElementById("shapes");
-	sh = sh.options[sh.selectedIndex].value
-	var car_option = document.getElementById("cars");
-	car_option = car_option.options[car_option.selectedIndex].value
-	var color_option = document.getElementById("colors");
-	color_option = color_option.options[color_option.selectedIndex].value
+	var x_val = x_axis.options[x_axis.selectedIndex].value
+	var y_val = y_axis.options[y_axis.selectedIndex].value
+	var sh_val = Number(sh.options[sh.selectedIndex].value)
+	var car_val = car_options.options[car_options.selectedIndex].value
+	var color_val = Number(color_options.options[color_options.selectedIndex].value)
 	// let fords = data.filter((car) => {
 	// 	return car.Manufacturer == "Ford"
 	// })
@@ -244,19 +241,24 @@ function draw() {
 			shape = 'circle'
 			rad = 3
 		}
-		if (color_option == 1) {
-			col = colors[data[i].Manufacturer]
-		} else if (color_option == 2 ){
-			col = colors[data[i].Origin]
-		} else if (color_option == 3 ){
-			col = colors[data[i].Year]
-		} else {
-			col = 'rgba(0,0,0,0.1)'
+		
+		switch (color_val) {
+			case 1:
+				col = colors[data[i].Manufacturer];
+				break;
+			case 2:
+				col = colors[data[i].Origin];
+				break;
+			case 3:
+				col = colors[data[i].Year];
+				break;
+			default:
+				col = 'rgba(0,0,0,0.1)';		
 		}
 
 		manus[i] = data[i].Manufacturer
 		datasets[i] = {
-						data: [{x: data[i][x_axis], y: data[i][y_axis]}],
+						data: [{x: data[i][x_val], y: data[i][y_val]}],
 						pointStyle: shape,
 						radius: rad,
 						backgroundColor: col
