@@ -38,7 +38,10 @@ const colors = {
     1973: '#35A6B5',
     1972: '#4EB1BE',
     1971: '#67BCC7',
-    1970: '#81C7D1',
+	1970: '#81C7D1',
+	American: 'rgba(68, 104, 23, 0.5)',
+	European: 'rgba(85, 53, 152, 0.5)',
+	Japanese: 'rgba(222, 141, 61, 0.5)',
 }
 
 const pointStyles = {
@@ -62,6 +65,7 @@ function initialize() {
 	var clientWidth = document.getElementById('canvaswrapper').clientWidth;
 	var wrapper = document.getElementById('canvaswrapper');
 	setupControlls()
+	generateRandomManuColors()
 	draw()
 	}
 
@@ -163,10 +167,13 @@ function setupControlls(){
 		car_options.add(option, car_options[i]);
 	}
 
+	var color_options = document.getElementById("colors");
+	
 	x_axis.addEventListener("change", draw)
 	y_axis.addEventListener("change", draw)
 	shapes.addEventListener("change", draw)
 	car_options.addEventListener("change", draw)
+	color_options.addEventListener("change", draw)
 }
 
 function draw() {
@@ -178,6 +185,8 @@ function draw() {
 	shapes = shapes.options[shapes.selectedIndex].value
 	var car_option = document.getElementById("cars");
 	car_option = car_option.options[car_option.selectedIndex].value
+	var color_option = document.getElementById("colors");
+	color_option = color_option.options[color_option.selectedIndex].value
 	// let fords = data.filter((car) => {
 	// 	return car.Manufacturer == "Ford"
 	// })
@@ -194,11 +203,22 @@ function draw() {
 			shape = 'circle'
 			rad = 3
 		}
+		if (color_option == 1) {
+			col = colors[data[i].Manufacturer]
+		} else if (color_option == 2 ){
+			col = colors[data[i].Origin]
+		} else if (color_option == 3 ){
+			col = colors[data[i].Year]
+		} else {
+			col = 'rgba(0,0,0,0.1)'
+		}
+
 		manus[i] = data[i].Manufacturer
 		datasets[i] = {
 						data: [{x: data[i][x_axis], y: data[i][y_axis]}],
 						pointStyle: shape,
 						radius: rad,
+						backgroundColor: col
 					}
 		//console.log(fords[i])
 	}
@@ -228,4 +248,18 @@ function draw() {
 		}
 	})
 
+}
+
+function generateRandomManuColors() {
+	var manus = data.map((car, index, data) => {
+		return car.Manufacturer
+	})
+	for (i = 0; i < manus.length; i++){
+		colors[manus[i]] = random_rgba()
+	}
+}
+
+function random_rgba() {
+    var o = Math.round, r = Math.random, s = 255;
+    return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + '0.5' + ')';
 }
