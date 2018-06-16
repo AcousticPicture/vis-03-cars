@@ -4,6 +4,7 @@
 
 // Fields
 let content = '';
+let data_head = []
 let data = []
 const file_path = "cars2.txt"
 
@@ -39,6 +40,12 @@ const colors = {
     1971: '#67BCC7',
     1970: '#81C7D1',
 }
+
+const pointStyles = {
+	American: 'triangle',
+	European: 'rect',
+	Japanese: 'circle'
+}
 // color shade picker
 // https://www.tutorialrepublic.com/html-reference/html-color-picker.php
 
@@ -46,15 +53,16 @@ const colors = {
 // if window loaded, start JS
 window.addEventListener('load', event => {
 	console.log('Start');
-	console.log(data);
+	//console.log(data);
     readTextFile();
-
     initialize();	// resize canvas and draw
 })
 
 function initialize() {
 	var clientWidth = document.getElementById('canvaswrapper').clientWidth;
 	var wrapper = document.getElementById('canvaswrapper');
+	setupControlls()
+	draw()
 	}
 
 // Reading File
@@ -84,7 +92,6 @@ function readTextFile() {
 			})
 			.join(' ');
 	}	
-	let data_head = [];
 	
 	readXMLHttpRequest();
 	// --- Reading data to objects ---
@@ -104,7 +111,7 @@ function readTextFile() {
 		for(key = 0; key < data_head.length; key ++){
 			// setting up map
 			if (data_head[key] == "Model Year") {
-				line['Year'] = "19".concat(columns[key]);
+				line['Year'] = parseInt("19".concat(columns[key]));
 			} else {
 				let str = columns[key];
 				if (typeof str === 'undefined') {
@@ -129,3 +136,96 @@ function readTextFile() {
 	}
 }
 
+function setupControlls(){
+	// Adding select Options to axis-controls
+
+	var x_axis = document.getElementById("x_axis");
+	var y_axis = document.getElementById("y_axis");
+	for (i = 0; i < data_head.length; i ++) {
+		var option = document.createElement("option");
+		option.text = data_head[i];
+		x_axis.add(option, x_axis[i]);
+		//TODO: How to copy object?
+		var option = document.createElement("option");
+		option.text = data_head[i];
+		y_axis.add(option, y_axis[i]);
+	}
+	
+	var shapes = document.getElementById("shapes");
+	var car_options = document.getElementById("cars");
+
+	var cars = data.map((car, index, data) => {
+		return car.Car
+	})
+	for (i = 0; i < cars.length; i ++) {
+		var option = document.createElement("option");
+		option.text = cars[i];
+		car_options.add(option, car_options[i]);
+	}
+
+	x_axis.addEventListener("change", draw)
+	y_axis.addEventListener("change", draw)
+	shapes.addEventListener("change", draw)
+	car_options.addEventListener("change", draw)
+}
+
+function draw() {
+	var x_axis = document.getElementById("x_axis");
+	x_axis = x_axis.options[x_axis.selectedIndex].value
+	var y_axis = document.getElementById("y_axis");
+	y_axis = y_axis.options[y_axis.selectedIndex].value
+	var shapes = document.getElementById("shapes");
+	shapes = shapes.options[shapes.selectedIndex].value
+	var car_option = document.getElementById("cars");
+	car_option = car_option.options[car_option.selectedIndex].value
+	// let fords = data.filter((car) => {
+	// 	return car.Manufacturer == "Ford"
+	// })
+	manus = []
+	datasets = []
+	for (i = 0; i < data.length; i++) {
+		if (shapes == 1) {
+			shape = pointStyles[data[i].Origin]
+			rad = 3
+		} else if (shapes == 2 && data[i].Car == car_option){
+			shape = 'rectRot'
+			rad = 10
+		} else {
+			shape = 'circle'
+			rad = 3
+		}
+		manus[i] = data[i].Manufacturer
+		datasets[i] = {
+						data: [{x: data[i][x_axis], y: data[i][y_axis]}],
+						pointStyle: shape,
+						radius: rad,
+					}
+		//console.log(fords[i])
+	}
+	scatterChart = new Chart(ctx, {
+		type: 'scatter',
+		data: {
+			manu: manus,
+			labels: data.map((car, index, data) => {
+				return car.Car
+			}),
+			datasets: datasets,
+		},
+		options: {
+			legend: {
+				display: false,
+			},
+			tooltips: {
+				callbacks: {
+				   label: function(tooltipItem, data) {
+						var label = data.manu[tooltipItem.datasetIndex];
+					  	var car_label = data.labels[tooltipItem.datasetIndex];
+					    return car_label + " | " + label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
+				   }
+				}
+			 }
+			
+		}
+	})
+
+}
