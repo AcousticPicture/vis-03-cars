@@ -10,3 +10,11 @@
     font: 20pt bold 'Vollkorn';
     color: #bbb;
 }
+
+.lb {
+	font-weight: inherit;
+}
+
+.lb>select {
+	margin-left: 4%;
+}
