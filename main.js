@@ -189,14 +189,12 @@ function setupControlls(){
 	var x_axis = document.getElementById("x_axis");
 	var y_axis = document.getElementById("y_axis");
 	for (i = 0; i < data_head.length; i ++) {
-		var option = document.createElement("option");
-		option.text = data_head[i];
-		x_axis.add(option, x_axis[i]);
-		//TODO: How to copy object?
-		var option = document.createElement("option");
-		option.text = data_head[i];
-		y_axis.add(option, y_axis[i]);
+		// Use the Option constructor: args text, value, defaultSelected, selected
+		x_axis.appendChild(new Option(data_head[i], x_axis[i]));
+		y_axis.appendChild(new Option(data_head[i], y_axis[i]));
 	}
+	//op = x_axis.innerHTML;
+	//y_axis.innerHTML = y_axis.innerHTML + op;
 	
 	var sh = document.getElementById("shapes");
 	var car_options = document.getElementById("cars");
