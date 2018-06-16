@@ -6,10 +6,10 @@
 let content = '';
 let data_head = []
 let data = []
-const file_path = "cars2.txt"
 
 var shapes = [];  // the collection of car boxes
 
+var vis = false;
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 var width = 820
@@ -56,37 +56,56 @@ const pointStyles = {
 // if window loaded, start JS
 window.addEventListener('load', event => {
 	console.log('Start');
-	//console.log(data);
-    readTextFile();
     initialize();	// resize canvas and draw
 })
 
 function initialize() {
 	var clientWidth = document.getElementById('canvaswrapper').clientWidth;
 	var wrapper = document.getElementById('canvaswrapper');
-	setupControlls()
-	generateRandomManuColors()
-	draw()
+	
+	// Setup the dnd listeners.
+	document.getElementById('files').addEventListener('change', handleFileSelect, false);
+	document.getElementById('canvaswrapper').style.visibility='hidden';
+	document.getElementById('controlls').style.visibility='hidden';
 	}
 
-// Reading File
-function readXMLHttpRequest() 
-{
-    var rawFile = new XMLHttpRequest();
-     rawFile.open("GET", file_path, false);
-     rawFile.onreadystatechange = function () {
-         if(rawFile.readyState === 4) {
-             if(rawFile.status === 200 || rawFile.status == 0) {
-                content = rawFile.responseText;
-             }
-         }
-     }
-     rawFile.send(null);
-}
+// Reading File -> is called every time a new file is selected
+function handleFileSelect(evt) {	
+	var files = evt.target.files; // FileList object
+	if (files.length > 0) {
+		// there is only one file
+		var f = files[0];
 
-// Reading File
-// TODO: Read from Input-File
+		var reader = new FileReader();
+
+		// Closure to capture the file information.
+		reader.onload = (function(theFile) {
+			return function(e) {
+				// callback function (asynchronous!) -> is called, when results have arrived
+				console.log("load file: " + escape(theFile.name));
+				content = e.target.result;
+				document.getElementById('headline').innerHTML = 'Data: ' + escape(theFile.name);
+				readTextFile();
+				updateChart();
+			};
+		})(f);
+
+		// Read in the file as a string.
+		reader.readAsText(f);
+		
+		if (!vis) {	// first file: show chart
+			vis = true;
+			document.getElementById('canvaswrapper').style.visibility='visible' ;
+			document.getElementById('controlls').style.visibility='visible' ;
+		}
+	}
+}
+  
+ 
 function readTextFile() {
+	// --- Reading data to objects ---
+	
+	
 	var toUpper = function(str) {
 		return str
 			.toLowerCase()
@@ -96,12 +115,10 @@ function readTextFile() {
 			})
 			.join(' ');
 	}	
-	
-	readXMLHttpRequest();
-	// --- Reading data to objects ---
 
 	// split to get only lines
 	var lines = content.split("\n")
+	console.log(lines);
 
 	data_head =  lines[0].replace('\t\r','').split('\t')
 
@@ -138,6 +155,12 @@ function readTextFile() {
 		line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
 		data.push(line)
 	}
+}
+
+function updateChart() {
+	setupControlls();
+	generateRandomManuColors();
+	draw();
 }
 
 function setupControlls(){
