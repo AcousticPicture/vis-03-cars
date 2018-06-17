@@ -146,7 +146,9 @@ function readTextFile(f) {
 				document.getElementById('headline').innerHTML = 'Data: ' + escape(theFile.name);
 				
 				// split to get only lines
-				var lines = content.split("\n")
+				let lines1 = content.split("\n");
+				let lines2 = content.split("\r");
+				let lines = (lines1.length > lines2.length) ? lines1 : lines2;
 				console.log(lines);
 
 				data_head =  lines[0].replace('\n','').replace('\t\t\r','').replace('\t\r','').split('\t');
