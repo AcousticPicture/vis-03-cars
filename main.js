@@ -180,13 +180,7 @@ function readTextFile(f) {
 							}
 						}
 					}
-					// conversions
-					line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
-					data_head_num['WeightKG'] = 1;
-					line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
-					data_head_num['Displacement2'] = 1;
-					line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
-					data_head_num['Reach'] = 1;
+
 					data.push(line)
 				}
 				
@@ -316,6 +310,7 @@ function draw() {
 		options: {
 			legend: {
 				display: true,
+				reverse: true,
 				position: 'right'
 			},
 			tooltips: {
@@ -345,7 +340,6 @@ function draw() {
 			}
 		}
 	})
-
 }
 
 function generateRandomManuColors() {
