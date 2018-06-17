@@ -239,17 +239,14 @@ function draw() {
 	var y_val = y_axis.options[y_axis.selectedIndex].value
 	var sh_val = Number(sh.options[sh.selectedIndex].value)
 	var car_val = car_options.options[car_options.selectedIndex].value
-	var color_val = Number(color_options.options[color_options.selectedIndex].value)
-	// let fords = data.filter((car) => {
-	// 	return car.Manufacturer == "Ford"
-	// })
+	var color_val = color_options.options[color_options.selectedIndex].value
+
 	var ds = data;
 	if (car_val != '') {
 		ds = data.filter((car) => {
 			return car.Car == car_val;
 		});
 	}
-	manus = []
 	datasets = []
 	for (i = 0; i < ds.length; i++) {
 		if (sh == 1) {
@@ -263,21 +260,10 @@ function draw() {
 			rad = 3
 		}
 		
-		switch (color_val) {
-			case 1:
-				col = colors[ds[i].Manufacturer];
-				break;
-			case 2:
-				col = colors[ds[i].Origin];
-				break;
-			case 3:
-				col = colors[ds[i].Year];
-				break;
-			default:
-				col = 'rgba(0,0,0,0.1)';		
-		}
+		col = colors[ds[i][color_val]];
+		if (typeof col == 'undefined') 
+			col = 'rgba(0,0,0,0.1)';
 
-		manus[i] = ds[i].Manufacturer
 		datasets[i] = {
 						data: [{x: ds[i][x_val], y: ds[i][y_val]}],
 						pointStyle: shape,
@@ -286,8 +272,14 @@ function draw() {
 					}
 	}	// end for
 	
+	var manus = ds.map((car) => {return car.Manufacturer});
+	var cars = ds.map((car) => {return car.Car});
+	var labels = ds.map((car) => {return car[color_val]});
+	
 	var dat = {
 			manu: manus,
+			car: cars,
+			lab: labels,
 			datasets: datasets,
 		};
 	var x = [{
@@ -324,13 +316,24 @@ function draw() {
 				display: false,
 			},
 			tooltips: {
+				mode: 'point',
+				intersect: true,
 				callbacks: {
-				   label: function(tooltipItem, data) {
-						var label = ds.manu[tooltipItem.datasetIndex];
-					  	var car_label = ds.labels[tooltipItem.datasetIndex];
-					    return car_label + " | " + label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
+					title: function(a, d) {
+						return x_val + ': ' + a[0].xLabel + ', ' + y_val + ': ' + a[0].yLabel;
+					},
+					label: function(tooltipItem, d) {
+						var mlabel = d.manu[tooltipItem.datasetIndex];
+						var clabel = d.car[tooltipItem.datasetIndex];
+					  	//var car_label = d.labels[tooltipItem.datasetIndex];
+						if (color_val == 'None') {
+							return mlabel + ' ' + clabel;
+						} else {
+							var color_label = d.lab[tooltipItem.datasetIndex];
+							return color_label + " | " + mlabel + ' ' + clabel;
+						}
 				   }
-				}
+				}		
 			},
 			responsive: true,
 			scales: {
