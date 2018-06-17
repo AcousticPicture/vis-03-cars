@@ -10,6 +10,8 @@ let data = []
 let years = []
 
 var vis = false;
+var de = false;
+
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 var width = 820
@@ -146,26 +148,34 @@ function readTextFile(f) {
 				document.getElementById('headline').innerHTML = 'Data: ' + escape(theFile.name);
 				
 				// split to get only lines
-				let lines1 = content.split("\n");
-				let lines2 = content.split("\r");
-				let lines = (lines1.length > lines2.length) ? lines1 : lines2;
+					// german file: in between only \t, at the end only \r
+					//english file: in between only \t, at the end \t\r\n
+				content = content.replace(/\t\r\n/gi,'\r');	
+				content = content.replace(/\t\r/gi,'\r');
+				let lines = content.split("\r");
 				console.log(lines);
 
-				data_head =  lines[0].replace('\n','').replace('\t\t\r','').replace('\t\r','').split('\t');
+				//data_head =  lines[0].replace('\n','').replace('\t\t\r','').replace('\t\r','').split('\t');
+				data_head =  lines[0].split('\t');
 
 				for(i = 1; i < lines.length; i ++){
 					// prepare object
 					let line = {}
 					// split line from tabs
-					let columns =  lines[i].replace('\t\r','').split('\t');
+					let l = lines[i];
+					l = l.replace(/\n/g,'');
+					l = l.replace(/\t\r/g,'');
+					let columns =  l.split('\t');
 					if (columns.length == 1 && columns[0] == '') continue;	// ignore empty lines
 					
 					for(key = 0; key < data_head.length; key ++){
 						// setting up map
 						if (data_head[key] == "Model Year") {
+							de = false;
 							line['Year'] = parseInt("19".concat(columns[key]));
 							data_head_num['Year'] = 1;
 						} else if (data_head[key] == "Baujahr") {
+							de = true;
 							line['Jahr'] = parseInt("19".concat(columns[key]));
 							data_head_num['Jahr'] = 1;
 						} else {
@@ -190,11 +200,19 @@ function readTextFile(f) {
 					data.push(line)
 				}
 				
-				years = data.map((car) => { // get only Year
+				if (de) {
+					years = data.map((car) => { // get only Year
+							return car.Jahr;
+						}).filter(function (value, index, self) { // only unique
+							return self.indexOf(value) === index;
+						});
+				} else {
+					years = data.map((car) => { // get only Year
 							return car.Year
 						}).filter(function (value, index, self) { // only unique
 							return self.indexOf(value) === index;
 						});
+				}
 				updateChart();
 			};
 		})(f);	// end of callback function
@@ -229,9 +247,16 @@ function setupControlls(){
 	y_axis.selectedIndex = x_axis.selectedIndex + 1;
 
 	// car options
-	var cars = data.map((car, index, data) => {
-		return car.Car
-	})
+	var cars;
+	if (de) {
+		cars = data.map((car, index, data) => {
+			return car.Model;
+		})
+	} else {
+		cars = data.map((car, index, data) => {
+			return car.Car
+		})
+	}
 	for (i = 0; i < cars.length; i ++) {
 		car_options.appendChild(new Option(cars[i], car_options[i]));
 	}
@@ -240,14 +265,14 @@ function setupControlls(){
 	
 	// shape options
 	sh.appendChild(new Option('--', sh[i++]));
-	if (data_head.indexOf('Origin') < 0) {
+	if (de) {
 		sh.appendChild(new Option('Herkunft', sh[i++]));
 	} else {
 		sh.appendChild(new Option('Origin', sh[i++]));
 	}
 	
 	// color options
-	if (data_head.indexOf('Origin') < 0) {
+	if (de) {
 		color_options.appendChild(new Option('Hersteller', color_options[i++]));
 		color_options.appendChild(new Option('Herkunft', color_options[i++]));
 		color_options.appendChild(new Option('Jahr', color_options[i++]));
@@ -269,9 +294,16 @@ function draw() {
 	// if there is a filter, reduce data!
 	var ds = data;
 	if (car_val != '') {
-		ds = data.filter((car) => {
-			return car.Car == car_val;
-		});
+		if (de) {
+			ds = data.filter((car) => {
+				return car.Model == car_val;
+			});
+		} else {
+			ds = data.filter((car) => {
+				return car.Car == car_val;
+			});
+
+		}
 	}
 	
 	//********** build datasets *************//
@@ -318,8 +350,8 @@ function draw() {
 	
 	//********* build options for chart ************//
 	// arrays for tooltips
-	var manus = ds.map((car) => {return car.Manufacturer});
-	var cars = ds.map((car) => {return car.Car});
+	var manus = (de) ? ds.map((car) => {return car.Hersteller}) :ds.map((car) => {return car.Manufacturer});
+	var cars = (de) ? ds.map((car) => {return car.Model}) : ds.map((car) => {return car.Car});
 	// arrays for legend
 	var labels = ds.map((car) => {return (car[color_val] + ' ' + car[shape_val])});
 	var colorlegend = mapUnique(ds, color_val);
@@ -350,12 +382,12 @@ function draw() {
 		}];
 		
 	// special case: year in axes
-	if (x_val == 'Year') {
+	if (x_val == 'Year' || x_val == 'Jahr') {
 		dat['xLabels'] = years;
 		x[0]['type'] = 'category';
 		
 	} 
-	if (y_val == 'Year') {
+	if (y_val == 'Year' || y_val == 'Jahr') {
 		dat['yLabels'] = years;
 		y[0]['type'] = 'category';
 		y[0]['position'] = 'left';
@@ -425,10 +457,11 @@ function draw() {
 					label: function(tooltipItem, d) {
 						var mlabel = d.manu[tooltipItem.datasetIndex];
 						var clabel = d.car[tooltipItem.datasetIndex];
-						if (color_val == 'None') {
+						if (color_val == '--') {
 							return mlabel + ' ' + clabel;
 						} else {
-							var color_label = d.lab[tooltipItem.datasetIndex];
+							var color_label = d.labels[tooltipItem.datasetIndex];
+							color_label = color_label.replace(' undefined', '');
 							return color_label + "  |  " + mlabel + ' ' + clabel;
 						}
 				   }
@@ -445,13 +478,13 @@ function draw() {
 
 function generateRandomManuColors() {
 	var manus = [];
-	if (data_head.indexOf('Manufacturer') >= 0) {
+	if (de) {
 		manus = data.map((car, index, data) => {
-			return car.Manufacturer
+			return car.Hersteller
 		})
 	} else {
 		manus = data.map((car, index, data) => {
-			return car.Hersteller
+			return car.Manufacturer
 		})
 	}
 	for (i = 0; i < manus.length; i++){
