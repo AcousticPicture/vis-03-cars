@@ -241,36 +241,38 @@ function draw() {
 	var car_val = car_options.options[car_options.selectedIndex].value
 	var color_val = color_options.options[color_options.selectedIndex].value
 
+	// if there is a filter, reduce data!
 	var ds = data;
 	if (car_val != '') {
 		ds = data.filter((car) => {
 			return car.Car == car_val;
 		});
 	}
-	datasets = []
-	for (i = 0; i < ds.length; i++) {
-		if (sh == 1) {
-			shape = pointStyles[ds[i].Origin]
-			rad = 3
-		} else if (sh == 2 && ds[i].Car == car_option){
-			shape = 'rectRot'
-			rad = 10
-		} else {
-			shape = 'circle'
-			rad = 3
-		}
-		
-		col = colors[ds[i][color_val]];
+	
+	// group data (color)
+	let grp_data = groupBy(ds, color_val);
+	
+	var datasets = []
+	for (let i = 0; i < grp_data.length; i++) {
+		var col = colors[grp_data[i].key];
 		if (typeof col == 'undefined') 
 			col = 'rgba(0,0,0,0.1)';
-
+		shape = 'circle';
+		rad = 6;
+		
+		var d = [];
+		for (let k = 0; k < grp_data[i].values.length; k++) {
+			d[k] = {x: grp_data[i].values[k][x_val], y: grp_data[i].values[k][y_val]};
+			
+		} // end for values
 		datasets[i] = {
-						data: [{x: ds[i][x_val], y: ds[i][y_val]}],
-						pointStyle: shape,
-						radius: rad,
-						backgroundColor: col
-					}
-	}	// end for
+				label: grp_data[i].key,
+				data: d,
+				pointStyle: shape,
+				radius: rad,
+				backgroundColor: col
+			}
+	}	// end for group
 	
 	var manus = ds.map((car) => {return car.Manufacturer});
 	var cars = ds.map((car) => {return car.Car});
@@ -313,7 +315,8 @@ function draw() {
 		data: dat,
 		options: {
 			legend: {
-				display: false,
+				display: true,
+				position: 'right'
 			},
 			tooltips: {
 				mode: 'point',
@@ -364,3 +367,13 @@ function handleDragOver(evt) {
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
+
+function groupBy(xs, key) { 
+	return xs.reduce(function (rv, x) { 
+		let v = key instanceof Function ? key(x) : x[key]; 
+		let el = rv.find((r) => r && r.key === v); 
+		if (el) { el.values.push(x); } 
+		else { rv.push({ key: v, values: [x] }); } 
+		return rv; }, 
+	[]); 
+}
