@@ -245,6 +245,7 @@ function draw() {
 		});
 	}
 	
+	//********** build datasets *************//
 	// group data (color)
 	let grp_data_col = groupBy(ds, color_val);
 	
@@ -286,10 +287,13 @@ function draw() {
 		}	// end for shape group
 	}	// end for color group
 	
+	//********* build options for chart ************//
+	// arrays for tooltips
 	var manus = ds.map((car) => {return car.Manufacturer});
 	var cars = ds.map((car) => {return car.Car});
-	var labels = ds.map((car) => {return car[color_val]});
+	var labels = ds.map((car) => {return (car[color_val] + ' ' + car[shape_val])});
 	
+	// numeric values in axes
 	var dat = {
 			manu: manus,
 			car: cars,
@@ -311,17 +315,20 @@ function draw() {
 			}
 		}];
 		
+	// special case: year in axes
 	if (x_val == 'Year') {
 		dat['xLabels'] = years;
 		x[0]['type'] = 'category';
 		
-	} else if (y_val == 'Year') {
+	} 
+	if (y_val == 'Year') {
 		dat['yLabels'] = years;
 		y[0]['type'] = 'category';
 		y[0]['position'] = 'left';
 		y[0]['ticks'] = {reverse: true};
 	}
-				
+		
+	//********* build chart ************//
 	scatterChart = new Chart(ctx, {
 		type: 'scatter',
 		data: dat,
@@ -348,7 +355,7 @@ function draw() {
 							return mlabel + ' ' + clabel;
 						} else {
 							var color_label = d.lab[tooltipItem.datasetIndex];
-							return color_label + " | " + mlabel + ' ' + clabel;
+							return color_label + "  |  " + mlabel + ' ' + clabel;
 						}
 				   }
 				}		
