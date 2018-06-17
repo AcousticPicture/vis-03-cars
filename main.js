@@ -380,30 +380,34 @@ function draw() {
 						if (data.shapelegend.length) {
 							for (let a in data.shapelegend) {
 								let s = data.shapelegend[a];
-								let legendItem = {
-									text: s,
-									pointStyle: pointStyles[s],
-									fillStyle: 'rgb(255, 255, 255)',
-									lineWidth: 1,
-									strokeStyle: 'rgb(0, 0, 0)',
-									index: i
+								if (s !== undefined) {
+									let legendItem = {
+										text: s,
+										pointStyle: pointStyles[s],
+										fillStyle: 'rgb(255, 255, 255)',
+										lineWidth: 1,
+										strokeStyle: 'rgb(0, 0, 0)',
+										index: i
+									}
+									leg.push(legendItem);
+									i++;
 								}
-								leg.push(legendItem);
-								i++;
 							}
 						}
 						if (data.colorlegend.length) {
 							for (let a in data.colorlegend) {
 								let c = data.colorlegend[a];
-								let legendItem = {
-									text: c,
-									pointStyle: 'rect',
-									fillStyle: colors[c],
-									strokeStyle: colors[c],
-									index: i
+								if (c !== undefined) {
+									let legendItem = {
+										text: c,
+										pointStyle: 'rect',
+										fillStyle: colors[c],
+										strokeStyle: colors[c],
+										index: i
+									}
+									leg.push(legendItem);
+									i++;
 								}
-								leg.push(legendItem);
-								i++;
 							}
 						}
 						return leg;
