@@ -291,13 +291,18 @@ function draw() {
 	// arrays for tooltips
 	var manus = ds.map((car) => {return car.Manufacturer});
 	var cars = ds.map((car) => {return car.Car});
+	// arrays for legend
 	var labels = ds.map((car) => {return (car[color_val] + ' ' + car[shape_val])});
+	var colorlegend = mapUnique(ds, color_val);
+	var shapelegend = mapUnique(ds, shape_val);
 	
 	// numeric values in axes
 	var dat = {
 			manu: manus,
 			car: cars,
-			lab: labels,
+			labels: labels,
+			colorlegend: colorlegend,
+			shapelegend: shapelegend,
 			datasets: datasets,
 		};
 	var x = [{
@@ -338,6 +343,42 @@ function draw() {
 				reverse: true,
 				position: 'right',
 				labels: {
+					generateLabels: function(chart) {
+						// custom label function
+						let i = 0;
+						var data = chart.data;
+						var leg = [];
+						if (data.shapelegend.length) {
+							for (let a in data.shapelegend) {
+								let s = data.shapelegend[a];
+								let legendItem = {
+									text: s,
+									pointStyle: pointStyles[s],
+									fillStyle: 'rgb(255, 255, 255)',
+									lineWidth: 1,
+									strokeStyle: 'rgb(0, 0, 0)',
+									index: i
+								}
+								leg.push(legendItem);
+								i++;
+							}
+						}
+						if (data.colorlegend.length) {
+							for (let a in data.colorlegend) {
+								let c = data.colorlegend[a];
+								let legendItem = {
+									text: c,
+									pointStyle: 'rect',
+									fillStyle: colors[c],
+									strokeStyle: colors[c],
+									index: i
+								}
+								leg.push(legendItem);
+								i++;
+							}
+						}
+						return leg;
+					},
 					usePointStyle: true
 				}
 			},
@@ -397,4 +438,13 @@ function groupBy(xs, key) {
 		else { rv.push({ key: v, values: [x] }); } 
 		return rv; }, 
 	[]); 
+}
+
+function mapUnique(arr, key) {
+	var result = arr.map((item) => { 
+					return item[key]
+				}).filter(function (value, index, self) { // only unique
+					return self.indexOf(value) === index;
+				});
+	return result;
 }
