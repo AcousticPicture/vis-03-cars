@@ -5,9 +5,8 @@
 // Fields
 let content = '';
 let data_head = []
+let data_head_num = {}
 let data = []
-
-var shapes = [];  // the collection of car boxes
 
 var vis = false;
 const canvas = document.getElementById('canvas')
@@ -125,8 +124,14 @@ function readTextFile(f) {
 				return word.substr(0,1).toUpperCase() + word.substr(1);
 			})
 			.join(' ');
-	}	
-	
+	}
+		
+	// clear all variables
+	content = '';
+	data_head = [];
+	data_head_num = {};
+	data = [];
+
 	var reader = new FileReader();
 
 		// Closure to capture the file information.
@@ -141,7 +146,7 @@ function readTextFile(f) {
 				var lines = content.split("\n")
 				console.log(lines);
 
-				data_head =  lines[0].replace('\t\r','').split('\t')
+				data_head =  lines[0].replace('\n','').replace('\t\t\r','').replace('\t\r','').split('\t');
 
 				for(i = 1; i < lines.length; i ++){
 					// prepare object
@@ -168,13 +173,17 @@ function readTextFile(f) {
 								line[data_head[key]] = String(str);
 							} else {
 								line[data_head[key]] = str2;
+								data_head_num[data_head[key]] = 1;
 							}
 						}
 					}
 					// conversions
 					line['WeightKG'] = line['Weight'] * 0.4536;	// weight in kg
+					data_head_num['WeightKG'] = 1;
 					line['Displacement2'] = line['Displacement'] * 16.387;	// displacement in ccm
+					data_head_num['Displacement2'] = 1;
 					line['Reach'] = 100 * 3.785 / (1.609 * line['MPG'])	// liters per 100km
+					data_head_num['Reach'] = 1;
 					data.push(line)
 				}
 				
@@ -199,17 +208,13 @@ function setupControlls(){
 	car_options.innerHTML = "";
 	
 	// Adding select Options to dropdown lists
-	for (i = 0; i < data_head.length; i ++) {
+	i = 0;
+	for (var key in data_head_num) {
 		// Use the Option constructor: args text, value, defaultSelected, selected
-		x_axis.appendChild(new Option(data_head[i], x_axis[i]));
+		x_axis.appendChild(new Option(key, x_axis[i++]));
 	}
 	y_axis.innerHTML = x_axis.innerHTML;	// just copy options
-	/*var op = new Option("X-Axis", "", true, true);
-	op.disabled = true;
-	x_axis.appendChild(op);
-	var op2 = new Option("Y-Axis", "", true, true);
-	op2.disabled = true;
-	y_axis.appendChild(op2);*/
+	y_axis.selectedIndex = x_axis.selectedIndex + 1;
 
 	var cars = data.map((car, index, data) => {
 		return car.Car

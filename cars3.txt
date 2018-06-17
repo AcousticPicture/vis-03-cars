@@ -1,0 +1,7 @@
+Car	Manufacturer	MPG	Cylinders	Displacement	Horsepower	Weight	Acceleration	Model Year	Origin		
+300d	mercedes	25,4	5	183,0	77	3530	20,1	79	European		
+504	peugeot	27,2	4	141,0	71	3190	24,8	79	European		
+210	datsun	31,8	4	85,0	65	2020	19,2	79	Japanese	
+strada custom	fiat	37,3	4	91,0	69	2130	14,7	79	European	
+200sx	datsun	32,9	4	119,0	100	2615	14,8	81	Japanese		
+810 maxima	datsun	24,2	6	146,0	120	2930	13,8	81	Japanese	
