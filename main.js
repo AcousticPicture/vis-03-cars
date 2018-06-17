@@ -222,6 +222,8 @@ function setupControlls(){
 	for (i = 0; i < cars.length; i ++) {
 		car_options.appendChild(new Option(cars[i], car_options[i]));
 	}
+	var op = new Option("ALL", "", true, true);
+	car_options.appendChild(op);
 }
 
 function draw() {
@@ -233,13 +235,19 @@ function draw() {
 	// let fords = data.filter((car) => {
 	// 	return car.Manufacturer == "Ford"
 	// })
+	var ds = data;
+	if (car_val != '') {
+		ds = data.filter((car) => {
+			return car.Car == car_val;
+		});
+	}
 	manus = []
 	datasets = []
-	for (i = 0; i < data.length; i++) {
+	for (i = 0; i < ds.length; i++) {
 		if (sh == 1) {
-			shape = pointStyles[data[i].Origin]
+			shape = pointStyles[ds[i].Origin]
 			rad = 3
-		} else if (sh == 2 && data[i].Car == car_option){
+		} else if (sh == 2 && ds[i].Car == car_option){
 			shape = 'rectRot'
 			rad = 10
 		} else {
@@ -249,21 +257,21 @@ function draw() {
 		
 		switch (color_val) {
 			case 1:
-				col = colors[data[i].Manufacturer];
+				col = colors[ds[i].Manufacturer];
 				break;
 			case 2:
-				col = colors[data[i].Origin];
+				col = colors[ds[i].Origin];
 				break;
 			case 3:
-				col = colors[data[i].Year];
+				col = colors[ds[i].Year];
 				break;
 			default:
 				col = 'rgba(0,0,0,0.1)';		
 		}
 
-		manus[i] = data[i].Manufacturer
+		manus[i] = ds[i].Manufacturer
 		datasets[i] = {
-						data: [{x: data[i][x_val], y: data[i][y_val]}],
+						data: [{x: ds[i][x_val], y: ds[i][y_val]}],
 						pointStyle: shape,
 						radius: rad,
 						backgroundColor: col
@@ -274,7 +282,7 @@ function draw() {
 		type: 'scatter',
 		data: {
 			manu: manus,
-			labels: data.map((car, index, data) => {
+			labels: ds.map((car, index, ds) => {
 				return car.Car
 			}),
 			datasets: datasets,
@@ -286,8 +294,8 @@ function draw() {
 			tooltips: {
 				callbacks: {
 				   label: function(tooltipItem, data) {
-						var label = data.manu[tooltipItem.datasetIndex];
-					  	var car_label = data.labels[tooltipItem.datasetIndex];
+						var label = ds.manu[tooltipItem.datasetIndex];
+					  	var car_label = ds.labels[tooltipItem.datasetIndex];
 					    return car_label + " | " + label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
 				   }
 				}
