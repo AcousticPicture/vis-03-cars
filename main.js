@@ -7,6 +7,7 @@ let content = '';
 let data_head = []
 let data_head_num = {}
 let data = []
+let years = []
 
 var vis = false;
 const canvas = document.getElementById('canvas')
@@ -159,6 +160,8 @@ function readTextFile(f) {
 						// setting up map
 						if (data_head[key] == "Model Year") {
 							line['Year'] = parseInt("19".concat(columns[key]));
+							//line['Year'] = "19".concat(columns[key]);
+							data_head_num['Year'] = 1;
 						} else {
 							let str = columns[key];
 							if (typeof str === 'undefined') {
@@ -187,6 +190,11 @@ function readTextFile(f) {
 					data.push(line)
 				}
 				
+				years = data.map((car) => { // get only Year
+							return car.Year
+						}).filter(function (value, index, self) { // only unique
+							return self.indexOf(value) === index;
+						});
 				updateChart();
 			};
 		})(f);	// end of callback function
@@ -276,17 +284,41 @@ function draw() {
 						radius: rad,
 						backgroundColor: col
 					}
-		//console.log(fords[i])
+	}	// end for
+	
+	var dat = {
+			manu: manus,
+			datasets: datasets,
+		};
+	var x = [{
+			display: true,
+			scaleLabel: {
+				display: true,
+				labelString: x_val
+			}
+		}];
+	var y = [{
+			display: true,
+			scaleLabel: {
+				display: true,
+				labelString: y_val
+			}
+		}];
+		
+	if (x_val == 'Year') {
+		dat['xLabels'] = years;
+		x[0]['type'] = 'category';
+		
+	} else if (y_val == 'Year') {
+		dat['yLabels'] = years;
+		y[0]['type'] = 'category';
+		y[0]['position'] = 'left';
+		y[0]['ticks'] = {reverse: true};
 	}
+				
 	scatterChart = new Chart(ctx, {
 		type: 'scatter',
-		data: {
-			manu: manus,
-			labels: ds.map((car, index, ds) => {
-				return car.Car
-			}),
-			datasets: datasets,
-		},
+		data: dat,
 		options: {
 			legend: {
 				display: false,
@@ -299,8 +331,12 @@ function draw() {
 					    return car_label + " | " + label + ': (' + tooltipItem.xLabel + ', ' + tooltipItem.yLabel + ')';
 				   }
 				}
-			 }
-			
+			},
+			responsive: true,
+			scales: {
+				xAxes: x,
+				yAxes: y
+			}
 		}
 	})
 
