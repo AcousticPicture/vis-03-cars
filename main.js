@@ -164,8 +164,10 @@ function readTextFile(f) {
 						// setting up map
 						if (data_head[key] == "Model Year") {
 							line['Year'] = parseInt("19".concat(columns[key]));
-							//line['Year'] = "19".concat(columns[key]);
 							data_head_num['Year'] = 1;
+						} else if (data_head[key] == "Baujahr") {
+							line['Jahr'] = parseInt("19".concat(columns[key]));
+							data_head_num['Jahr'] = 1;
 						} else {
 							let str = columns[key];
 							if (typeof str === 'undefined') {
@@ -212,9 +214,13 @@ function setupControlls(){
 	x_axis.innerHTML = "";
 	y_axis.innerHTML = "";
 	car_options.innerHTML = "";
+	sh.innerHTML = "";
+	color_options.innerHTML = "";
 	
 	// Adding select Options to dropdown lists
 	i = 0;
+	
+	// axes
 	for (var key in data_head_num) {
 		// Use the Option constructor: args text, value, defaultSelected, selected
 		x_axis.appendChild(new Option(key, x_axis[i++]));
@@ -222,6 +228,7 @@ function setupControlls(){
 	y_axis.innerHTML = x_axis.innerHTML;	// just copy options
 	y_axis.selectedIndex = x_axis.selectedIndex + 1;
 
+	// car options
 	var cars = data.map((car, index, data) => {
 		return car.Car
 	})
@@ -230,6 +237,26 @@ function setupControlls(){
 	}
 	var op = new Option("ALL", "", true, true);
 	car_options.appendChild(op);
+	
+	// shape options
+	sh.appendChild(new Option('--', sh[i++]));
+	if (data_head.indexOf('Origin') < 0) {
+		sh.appendChild(new Option('Herkunft', sh[i++]));
+	} else {
+		sh.appendChild(new Option('Origin', sh[i++]));
+	}
+	
+	// color options
+	if (data_head.indexOf('Origin') < 0) {
+		color_options.appendChild(new Option('Hersteller', color_options[i++]));
+		color_options.appendChild(new Option('Herkunft', color_options[i++]));
+		color_options.appendChild(new Option('Jahr', color_options[i++]));
+	} else {
+		color_options.appendChild(new Option('Manufacturer', color_options[i++]));
+		color_options.appendChild(new Option('Origin', color_options[i++]));
+		color_options.appendChild(new Option('Year', color_options[i++]));
+	}
+	color_options.appendChild(new Option('--', color_options[i++]));
 }
 
 function draw() {
@@ -413,9 +440,16 @@ function draw() {
 }
 
 function generateRandomManuColors() {
-	var manus = data.map((car, index, data) => {
-		return car.Manufacturer
-	})
+	var manus = [];
+	if (data_head.indexOf('Manufacturer') >= 0) {
+		manus = data.map((car, index, data) => {
+			return car.Manufacturer
+		})
+	} else {
+		manus = data.map((car, index, data) => {
+			return car.Hersteller
+		})
+	}
 	for (i = 0; i < manus.length; i++){
 		colors[manus[i]] = random_rgba()
 	}
