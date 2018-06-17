@@ -51,6 +51,8 @@ const colors = {
 }
 
 const pointStyles = {
+	// only 10 shapes possible -> shape can only be used for region
+	// http://www.chartjs.org/docs/latest/configuration/elements.html#point-styles
 	American: 'triangle',
 	European: 'rect',
 	Japanese: 'circle'
@@ -231,7 +233,7 @@ function setupControlls(){
 function draw() {
 	var x_val = x_axis.options[x_axis.selectedIndex].value
 	var y_val = y_axis.options[y_axis.selectedIndex].value
-	var sh_val = Number(sh.options[sh.selectedIndex].value)
+	var shape_val = sh.options[sh.selectedIndex].value
 	var car_val = car_options.options[car_options.selectedIndex].value
 	var color_val = color_options.options[color_options.selectedIndex].value
 
@@ -244,29 +246,45 @@ function draw() {
 	}
 	
 	// group data (color)
-	let grp_data = groupBy(ds, color_val);
+	let grp_data_col = groupBy(ds, color_val);
 	
 	var datasets = []
-	for (let i = 0; i < grp_data.length; i++) {
-		var col = colors[grp_data[i].key];
+	//go through each color group (e.g. year)
+	for (let i = 0; i < grp_data_col.length; i++) {
+		let col = colors[grp_data_col[i].key];
 		if (typeof col == 'undefined') 
 			col = 'rgba(0,0,0,0.1)';
-		shape = 'circle';
-		rad = 6;
 		
-		var d = [];
-		for (let k = 0; k < grp_data[i].values.length; k++) {
-			d[k] = {x: grp_data[i].values[k][x_val], y: grp_data[i].values[k][y_val]};
+		let grp_col = grp_data_col[i].values;
+		let grp_data_shp = groupBy(grp_col, shape_val);
+		
+		// go through each shape group (e.g. origin)
+		for (let s = 0; s < grp_data_shp.length; s++) {
+			let shape = pointStyles[grp_data_shp[s].key];
+			let rad = 6;
+			if (typeof shape == 'undefined')
+				shape = 'circle';
+		
+			let d = [];
+			// go through each dataset
+			for (let k = 0; k < (grp_shp = grp_data_shp[s].values).length; k++) {
+				d[k] = {x: grp_shp[k][x_val], y: grp_shp[k][y_val]};
+				
+			} // end for values
 			
-		} // end for values
-		datasets[i] = {
-				label: grp_data[i].key,
+			// concatenate label (color and shape!)
+			let l = grp_data_col[i].key + ' ' + grp_data_shp[s].key;
+			let index = i * grp_data_shp.length + s;
+			
+			datasets[index] = {
+				label: l,
 				data: d,
 				pointStyle: shape,
 				radius: rad,
 				backgroundColor: col
 			}
-	}	// end for group
+		}	// end for shape group
+	}	// end for color group
 	
 	var manus = ds.map((car) => {return car.Manufacturer});
 	var cars = ds.map((car) => {return car.Car});
@@ -311,7 +329,10 @@ function draw() {
 			legend: {
 				display: true,
 				reverse: true,
-				position: 'right'
+				position: 'right',
+				labels: {
+					usePointStyle: true
+				}
 			},
 			tooltips: {
 				mode: 'point',
@@ -323,7 +344,6 @@ function draw() {
 					label: function(tooltipItem, d) {
 						var mlabel = d.manu[tooltipItem.datasetIndex];
 						var clabel = d.car[tooltipItem.datasetIndex];
-					  	//var car_label = d.labels[tooltipItem.datasetIndex];
 						if (color_val == 'None') {
 							return mlabel + ' ' + clabel;
 						} else {
