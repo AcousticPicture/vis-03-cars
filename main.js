@@ -250,6 +250,7 @@ function draw() {
 	let grp_data_col = groupBy(ds, color_val);
 	
 	var datasets = []
+	var index = 0;
 	//go through each color group (e.g. year)
 	for (let i = 0; i < grp_data_col.length; i++) {
 		let col = colors[grp_data_col[i].key];
@@ -275,9 +276,8 @@ function draw() {
 			
 			// concatenate label (color and shape!)
 			let l = grp_data_col[i].key + ' ' + grp_data_shp[s].key;
-			let index = i * grp_data_shp.length + s;
 			
-			datasets[index] = {
+			datasets[index++] = {
 				label: l,
 				data: d,
 				pointStyle: shape,
